@@ -1,35 +1,26 @@
 // Do not remove the include below
 #include "ArudinoRgbController.h"
 
-byte ledPinR = 9;
-byte ledPinG = 10;
-byte ledPinB = 11;
-
-const int numStates = 9;
-const int alarmState = 0; // this is the state number of when the alarms will go off (see if-statements in loop())
-
-tmElements_t tm;
-
 void setup() {
     pinMode(A2,OUTPUT);
     pinMode(A3,OUTPUT);
-    digitalWrite(A2,LOW); // Turn on the ground for the DS1307
-    digitalWrite(A3,HIGH);// Turn on the +5vcc for the DS1307
+    digitalWrite(A2,LOW);  // Turn on the ground for the DS1307
+    digitalWrite(A3,HIGH); // Turn on the +5vcc for the DS1307
 
     // Enable the AIN0 comparator interrupt (called with the ISR(ANALOG_COMP_vect) function below)
-    ACSR = (0 << ACD) |     // Analog Comparator Enabled
-            (0 << ACBG) |   // Analog Comparator Bandgap Select: AIN0 is applied to the positive input
-            (0 << ACO) |    // Analog Comparator Output: Off
-            (1 << ACI) |    // Analog Comparator Interrupt Flag: Clear Pending Interrupt
-            (1 << ACIE) |   // Analog Comparator Interrupt: Enabled
-            (0 << ACIC) |   // Analog Comparator Input Capture: Disabled
-            (1 << ACIS1) | (0 << ACIS0); // Analog Comparator Interrupt Mode: Comparator Interrupt on Falling Output Edge
+    ACSR = (0 << ACD)  |  // Analog Comparator Enabled
+           (0 << ACBG) |  // Analog Comparator Bandgap Select: AIN0 is applied to the positive input
+           (0 << ACO)  |  // Analog Comparator Output: Off
+           (1 << ACI)  |  // Analog Comparator Interrupt Flag: Clear Pending Interrupt
+           (1 << ACIE) |  // Analog Comparator Interrupt: Enabled
+           (0 << ACIC) |  // Analog Comparator Input Capture: Disabled
+           (1 << ACIS1)| (0 << ACIS0); // Analog Comparator Interrupt Mode: Comparator Interrupt on Falling Output Edge
 
-    // Turn on the serial port
+    // Turn on serial port
     Serial.begin(115200);
     Serial.println("Starting Arduino...");
 
-    // Enable our LED pinouts
+    // Enable LED pins
     pinMode(ledPinR, OUTPUT);
     pinMode(ledPinG, OUTPUT);
     pinMode(ledPinB, OUTPUT);
@@ -44,233 +35,179 @@ void setup() {
     }
     digitalClockDisplay();
 
-    // Set up our alarms
-    Alarm.alarmRepeat(6, 15, 00, alarm01);  // Turn color to RED
-    Alarm.alarmRepeat(6, 30, 00, alarm02);  // Turn clock to YELLOW
-    Alarm.alarmRepeat(6, 45, 00, alarm03);  // Turn clock to GREEN
-//    Alarm.alarmRepeat(23, 55, 00, alarm03);  // Turn clock to GREEN
-//    Alarm.alarmRepeat(23, 50, 10, alarm03);  // Turn clock to GREEN
-//    Alarm.alarmRepeat(23, 54, 55, alarm04);  // Turn clock to GREEN
+    // Set up alarms
+    Alarm.alarmRepeat( 5, 30, 00, alarmToRed);   // Turn color to RED
+    Alarm.alarmRepeat( 6, 15, 00, alarmToYellow);// Turn clock to YELLOW
+    Alarm.alarmRepeat( 6, 45, 00, alarmToGreen); // Turn clock to GREEN
+    Alarm.alarmRepeat( 7, 30, 00, alarmToOff);   // Turn clock to OFF
 
-    clockCorrect = Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
+    // Set up dynamic modes
+    Alarm.alarmRepeat( 7, 30, 00, setDynamicMode00);
+    Alarm.alarmRepeat( 6, 00, 00, setDynamicMode01);
+    Alarm.alarmRepeat(19, 00, 00, setDynamicMode02);
+    Alarm.alarmRepeat(22, 00, 00, setDynamicMode03);
 
+    Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
+
+    // Make sure LED is off
     writeRGB(OFF);
 }
 
 void loop() {
-    if(switchState == alarmState){
-        if(changeState){blinkRGB(OFF);changeState=false;};
-        // Alarm state, leave blank to let the alarms turn on
-//        writeRGB(OFF);
-    } else if (switchState == 1) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-        writeRGB(ON);
-    } else if (switchState == 2) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        writeRGB(RED);
-        writeRGB(PINK);
-    } else if (switchState == 3) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        writeRGB(GREEN);
-        writeRGB(ORANGE);
-    } else if (switchState == 4) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        writeRGB(BLUE);
-        writeRGB(GREEN);
-    } else if (switchState == 5) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        crossFadeState = switchState;
-//        if(switchState!=crossFadeState){writeRGB(OFF);return;};
-//        crossFade(OFF,0,0);
-//        crossFade(RED,0,0);
-        writeRGB(BLUE);
-    } else if (switchState == 6) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        crossFadeState = switchState;
-//        if(switchState!=crossFadeState){writeRGB(OFF);return;};
-//        crossFade(OFF,0,0);
-//        crossFade(GREEN,0,0);
-        writeRGB(VIOLET);
-    } else if (switchState == 7) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-//        crossFadeState = switchState;
-//        if(switchState!=crossFadeState){writeRGB(OFF);return;};
-//        crossFade(OFF,0,0);
-//        crossFade(BLUE,0,0);
-        crossFadeRGB2(switchState);
-    } else if (switchState == 8) {
-        if(changeState){blinkRGB(OFF);changeState=false;};
-        crossFadeRGB(switchState);
+    // Handle button press
+    if(changeMode){
+        changeMode = false;
+        doOnceFlag = true;
+        count = 0;
+        curMode++;
+        Serial.print("curMode = "); Serial.println(curMode);
+        blinkRGBnTimes(WHITE,2);
     }
 
-    digitalClockDisplay();
-    Alarm.delay(100);
+    // Switch through different modes
+    switch(curMode){
+    case offState :
+        // OFF State
+        if(doOnce()){
+            crossFade(WHITE,OFF,1500);
+        }
+        break;
+
+    case alarmState :
+        // Alarm State
+        if(doOnce()){
+            crossFadeTo(WHITE,200);
+            crossFadeTo(RED,200);
+            crossFadeTo(YELLOW,200);
+            crossFadeTo(GREEN,200);
+            crossFadeTo(OFF,200);
+        }
+        break;
+
+    case dynamicState :
+        // Dynamic State
+        if(doOnce()){
+            crossFadeTo(PINK,200);
+            blinkRGBnTimes(PINK,2); writeRGB(PINK);
+            crossFadeTo(PURPLE,200);
+            blinkRGBnTimes(PURPLE,2); writeRGB(PURPLE);
+            crossFadeTo(BLUE,200);
+            blinkRGBnTimes(BLUE,2); writeRGB(BLUE);
+            crossFadeTo(OFF,200);
+        }
+        switch(dynamicMode){
+        case 0:
+            writeHSI(loopCount(360),1.0,1.0); Alarm.delay(20);
+            break;
+        case 1:
+            writeHSI(loopCount(360),1.0,0.1); Alarm.delay(20);
+            break;
+        case 2:
+            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(20);
+            break;
+        case 3:
+            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(20);
+            break;
+        default:
+            dynamicMode = 0; // Loop back
+            break;
+        }
+        break;
+
+    case 3 :
+        writeHSI(loopCount(360),1.0,1.0); Alarm.delay(20);
+        break;
+
+    case 4 :
+        writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(20);
+        break;
+
+    case 5 :
+        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(20);
+        break;
+
+    case 6 :
+        writeHSI(loopCount(360),1.0,0.1); Alarm.delay(20);
+        break;
+
+    case 7 :
+        writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(20);
+        break;
+
+    case 8 :
+        writeHSI((loopCount(120)+300)%360,1.0,0.1); Alarm.delay(20);
+        break;
+
+    case 9 :
+        writeRGB(WHITE);
+        break;
+
+    case 10 :
+        writeRGB(PURPLE);
+        break;
+
+    case 11 :
+        writeRGB(ORANGE);
+        break;
+
+    default:
+        curMode = 0; // Loop back
+        break;
+    }
+
+    // Print out current time (once every second)
+    if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
+        displayClockTime = millis();
+        digitalClockDisplay();
+    }
 }
 
-void alarm01(){
-	Serial.println("alarm01");
-    if(switchState!=alarmState){return;}
-    crossFadeState = switchState;
-    crossFade(RED,3);
-}
-
-void alarm02(){
-	Serial.println("alarm02");
-    if(switchState!=alarmState){return;}
-    crossFadeState = switchState;
-    crossFade(YELLOW,3);
-}
-
-void alarm03(){
-	Serial.println("alarm03");
-    if(switchState!=alarmState){return;}
-    crossFadeState = switchState;
-    crossFade(GREEN,3);
-}
-
-void rtcCorrection(){
-	digitalClockDisplay();
-	Serial.print("rtcCorrection: ");
-    if(switchState!=alarmState){return;}
-	// Disable the current alarm
-//	Alarm.disable(clockCorrect);
-	// Correct the clock
-	long singleWeekDelta = (long) -offsetSecPerYear / 365 * 7;
-	Serial.print(singleWeekDelta);
-    adjustTime(singleWeekDelta);
-    RTC.set(now());
-    // Wait until AFTER our alarm is going to start again to enable it
-//	Serial.print(" & wait for ");
-//	Serial.print(singleDayDelay*110);
-//    Alarm.delay(singleDayDelay*110);
-//    Alarm.enable(clockCorrect);
-    Serial.println(". Done.");
-    digitalClockDisplay();
-}
-
-
-void digitalClockDisplay(){
-    // digital clock display of the time
-    Serial.print(year());
-    Serial.print("-");
-    print2digits(month());
-    Serial.print("-");
-    print2digits(day());
-    Serial.print(" ");
-    print2digits(hour());
-    Serial.print(":");
-    print2digits(minute());
-    Serial.print(":");
-    print2digits(second());
-    Serial.println();
-}
-
-void print2digits(int number) {
-  if (number >= 0 && number < 10) {
-    Serial.write('0');
-  }
-  Serial.print(number);
-}
-
-void crossFadeRGB(int curState){
-    crossFadeState = curState;
-    if(switchState!=crossFadeState){writeRGB(OFF);return;};
-    crossFade(RED, 0, 0);
-    crossFade(YELLOW, 0, 0);
-    crossFade(GREEN, 0, 0);
-    crossFade(CYAN, 0, 0);
-    crossFade(BLUE, 0, 0);
-    crossFade(MAGENTA, 0, 0);
-}
-
-void crossFadeRGB2(int curState){
-    crossFadeState = curState;
-    if(switchState!=crossFadeState){writeRGB(OFF);return;};
-    crossFade(BLUE, 3, 0);
-    crossFade(CYAN, 3, 0);
-    crossFade(GREEN, 3, 0);
-    crossFade(CYAN, 3, 0);
-}
-
-// Function for the AIN0 interrupt; need to keep all the variables as volatile, can't really call other functions
+// Function for the AIN0 interrupt; need to keep all the variables as volatile, can't really call other [complex] functions
 ISR(ANALOG_COMP_vect) {
     buttonCurTime = millis();
     //check to see if the interrupt was called in the last 250 milliseconds
     if (abs(buttonCurTime - buttonLastTime) > 250) {
         buttonLastTime = buttonCurTime;
+        changeMode = true;
         // Call our interrupt function
-        btnInterrupt();
+//        btnInterrupt();
     }
 }
 
-void btnInterrupt() {
-    count++;
-    switchState = count % numStates;
-    changeState = true;
+void alarmToRed(){
+    Serial.println("alarm01");
+    if(curMode!=alarmState){return;}
+    crossFadeTo(RED,1000.0*60.0);
+}
+void alarmToYellow(){
+    Serial.println("alarm02");
+    if(curMode!=alarmState){return;}
+    crossFadeTo(YELLOW,1000.0*60.0);
+}
+void alarmToGreen(){
+    Serial.println("alarm03");
+    if(curMode!=alarmState){return;}
+    crossFadeTo(GREEN,1000.0*60.0);
+}
+void alarmToOff(){
+    Serial.println("alarm04");
+    if(curMode!=alarmState){return;}
+    crossFadeTo(OFF,1000.0*60.0);
 }
 
-void writeRGB(int r, int g, int b) {
-    // Clamp the values to be between the min/max
-//    r = max(min(r,255), 0);
-//    g = max(min(g,255), 0);
-//    b = max(min(b,255), 0);
-
-    redVal = r;
-    grnVal = g;
-    bluVal = b;
-
-    // Write the pin values out (this assumes high is off, and low is on);
-    analogWrite(ledPinR, 255-r);
-    analogWrite(ledPinG, 255-g);
-    analogWrite(ledPinB, 255-b);
+void setDynamicMode00(){
+    if(curMode!=dynamicState){return;}
+    dynamicMode = 0;
 }
-
-int calculateStep(int prevValue, int endValue) {
-    int step = endValue - prevValue; // What's the overall gap?
-    if (step) {                      // If its non-zero,
-        step = 1020 / step;              //   divide by 1020
-    }
-    return step;
+void setDynamicMode01(){
+    if(curMode!=dynamicState){return;}
+    dynamicMode = 1;
 }
-int calculateVal(int step, int val, int i) {
-    if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
-        if (step > 0) {          //   increment the value if step is positive...
-            val += 1;
-        } else if (step < 0) {       //   ...or decrement it if step is negative
-            val -= 1;
-        }
-    }
-    // Defensive driving: make sure val stays in the range 0-255
-    return min(max(val,0), 255);
+void setDynamicMode02(){
+    if(curMode!=dynamicState){return;}
+    dynamicMode = 2;
 }
-void crossFade(Color c) {
-    if(switchState!=crossFadeState){writeRGB(OFF);return;}; // Bail out
-    int stepR = calculateStep(prevR, c.red);
-    int stepG = calculateStep(prevG, c.green);
-    int stepB = calculateStep(prevB, c.blue);
-
-    for (int i = 0; i <= 1020; i++) {
-        if(switchState!=crossFadeState){writeRGB(OFF);return;}; // Bail out if we set our RAM flag
-
-        redVal = calculateVal(stepR, redVal, i);
-        grnVal = calculateVal(stepG, grnVal, i);
-        bluVal = calculateVal(stepB, bluVal, i);
-
-        writeRGB(redVal,grnVal,bluVal);
-
-        Alarm.delay(wait); // Pause for 'wait' milliseconds before resuming the loop
-    }
-
-    // Update current values for next loop
-    prevR = redVal;
-    prevG = grnVal;
-    prevB = bluVal;
-    Alarm.delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
-}
-
-void blinkRGB(Color c){
-    writeRGB(c);
-    Alarm.delay(50);
-    writeRGB(OFF);
-    Alarm.delay(50);
+void setDynamicMode03(){
+    if(curMode!=dynamicState){return;}
+    dynamicMode = 3;
 }
