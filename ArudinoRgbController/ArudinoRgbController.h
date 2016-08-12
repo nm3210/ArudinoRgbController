@@ -431,20 +431,5 @@ void crossFadeTo(Color c1, float msec){
     crossFade(PREV,c1,msec);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //Do not add code below this line
 #endif /* _ArudinoRgbController_H_ */

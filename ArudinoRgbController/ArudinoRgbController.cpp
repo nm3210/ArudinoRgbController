@@ -41,11 +41,11 @@ void setup() {
     Alarm.alarmRepeat( 6, 45, 00, alarmToGreen); // Turn clock to GREEN
     Alarm.alarmRepeat( 7, 30, 00, alarmToOff);   // Turn clock to OFF
 
-    // Set up dynamic modes
-    Alarm.alarmRepeat( 7, 30, 00, setDynamicMode00);
-    Alarm.alarmRepeat( 6, 00, 00, setDynamicMode01);
-    Alarm.alarmRepeat(19, 00, 00, setDynamicMode02);
-    Alarm.alarmRepeat(22, 00, 00, setDynamicMode03);
+//    // Set up dynamic modes
+//    Alarm.alarmRepeat( 7, 30, 00, setDynamicMode00);
+//    Alarm.alarmRepeat( 6, 00, 00, setDynamicMode01);
+//    Alarm.alarmRepeat(19, 00, 00, setDynamicMode02);
+//    Alarm.alarmRepeat(22, 00, 00, setDynamicMode03);
 
     Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
 
@@ -84,34 +84,37 @@ void loop() {
         }
         break;
 
-    case dynamicState :
-        // Dynamic State
-        if(doOnce()){
-            crossFadeTo(PINK,200);
-            blinkRGBnTimes(PINK,2); writeRGB(PINK);
-            crossFadeTo(PURPLE,200);
-            blinkRGBnTimes(PURPLE,2); writeRGB(PURPLE);
-            crossFadeTo(BLUE,200);
-            blinkRGBnTimes(BLUE,2); writeRGB(BLUE);
-            crossFadeTo(OFF,200);
-        }
-        switch(dynamicMode){
-        case 0:
-            writeHSI(loopCount(360),1.0,1.0); Alarm.delay(20);
-            break;
-        case 1:
-            writeHSI(loopCount(360),1.0,0.1); Alarm.delay(20);
-            break;
-        case 2:
-            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(20);
-            break;
-        case 3:
-            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(20);
-            break;
-        default:
-            dynamicMode = 0; // Loop back
-            break;
-        }
+//    case dynamicState :
+//        // Dynamic State
+//        if(doOnce()){
+//            crossFadeTo(PINK,200);
+//            blinkRGBnTimes(PINK,2); writeRGB(PINK);
+//            crossFadeTo(PURPLE,200);
+//            blinkRGBnTimes(PURPLE,2); writeRGB(PURPLE);
+//            crossFadeTo(BLUE,200);
+//            blinkRGBnTimes(BLUE,2); writeRGB(BLUE);
+//            crossFadeTo(OFF,200);
+//        }
+//        switch(dynamicMode){
+//        case 0:
+//            writeHSI(loopCount(360),1.0,1.0); Alarm.delay(25);
+//            break;
+//        case 1:
+//            writeHSI(loopCount(360),1.0,0.1); Alarm.delay(25);
+//            break;
+//        case 2:
+//            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
+//            break;
+//        case 3:
+//            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
+//            break;
+//        default:
+//            dynamicMode = 0; // Loop back
+//            break;
+//        }
+//        break;
+    case 2 :
+        curMode++; // Skip dynamic mode for now
         break;
 
     case 3 :
@@ -195,19 +198,19 @@ void alarmToOff(){
     crossFadeTo(OFF,1000.0*60.0);
 }
 
-void setDynamicMode00(){
-    if(curMode!=dynamicState){return;}
-    dynamicMode = 0;
-}
-void setDynamicMode01(){
-    if(curMode!=dynamicState){return;}
-    dynamicMode = 1;
-}
-void setDynamicMode02(){
-    if(curMode!=dynamicState){return;}
-    dynamicMode = 2;
-}
-void setDynamicMode03(){
-    if(curMode!=dynamicState){return;}
-    dynamicMode = 3;
-}
+//void setDynamicMode00(){
+//    if(curMode!=dynamicState){return;}
+//    dynamicMode = 0;
+//}
+//void setDynamicMode01(){
+//    if(curMode!=dynamicState){return;}
+//    dynamicMode = 1;
+//}
+//void setDynamicMode02(){
+//    if(curMode!=dynamicState){return;}
+//    dynamicMode = 2;
+//}
+//void setDynamicMode03(){
+//    if(curMode!=dynamicState){return;}
+//    dynamicMode = 3;
+//}
