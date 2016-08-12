@@ -113,7 +113,7 @@ static const Color GREEN   (120, 1.00, 1.00);
 static const Color BLUE    (240, 1.00, 1.00);
 
 static const Color MAGENTA (300, 1.00, 1.00);
-static const Color YELLOW  ( 57, 1.00, 1.00);
+static const Color YELLOW  ( 60, 1.00, 1.00);
 static const Color CYAN    (180, 1.00, 1.00);
 
 static const Color ORANGE  (  4, 1.00, 0.33);
@@ -153,6 +153,8 @@ void crossFadeHSI(int h1, float s1, float i1, int h2, float s2, float i2, long n
 void crossFade(Color c1, Color c2, long n, int d);
 void crossFade(Color c1, Color c2, float msec);
 void crossFadeTo(Color c1, float msec);
+Color adjustSat(Color c, float newSat);
+Color adjustInt(Color c, float newInt);
 //void btnInterrupt();
 bool doOnce();
 //bool doOnce(BoolHolder b);
@@ -431,5 +433,11 @@ void crossFadeTo(Color c1, float msec){
     crossFade(PREV,c1,msec);
 }
 
+Color adjustSat(Color c, float newSat){
+    return Color(c.hue,newSat,c.intensity);
+}
+Color adjustInt(Color c, float newInt){
+    return Color(c.hue,c.sat,newInt);
+}
 //Do not add code below this line
 #endif /* _ArudinoRgbController_H_ */

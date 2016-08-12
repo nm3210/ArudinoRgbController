@@ -36,9 +36,9 @@ void setup() {
     digitalClockDisplay();
 
     // Set up alarms
-    Alarm.alarmRepeat( 5, 30, 00, alarmToRed);   // Turn color to RED
+    Alarm.alarmRepeat( 5, 45, 00, alarmToRed);   // Turn color to RED
     Alarm.alarmRepeat( 6, 15, 00, alarmToYellow);// Turn clock to YELLOW
-    Alarm.alarmRepeat( 6, 45, 00, alarmToGreen); // Turn clock to GREEN
+    Alarm.alarmRepeat( 6, 30, 00, alarmToGreen); // Turn clock to GREEN
     Alarm.alarmRepeat( 7, 30, 00, alarmToOff);   // Turn clock to OFF
 
 //    // Set up dynamic modes
@@ -84,7 +84,8 @@ void loop() {
         }
         break;
 
-//    case dynamicState :
+    case dynamicState :
+        curMode++; // Skip dynamic mode for now
 //        // Dynamic State
 //        if(doOnce()){
 //            crossFadeTo(PINK,200);
@@ -112,33 +113,30 @@ void loop() {
 //            dynamicMode = 0; // Loop back
 //            break;
 //        }
-//        break;
-    case 2 :
-        curMode++; // Skip dynamic mode for now
         break;
 
     case 3 :
-        writeHSI(loopCount(360),1.0,1.0); Alarm.delay(20);
+        writeHSI(loopCount(360),1.0,1.0); Alarm.delay(25);
         break;
 
     case 4 :
-        writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(20);
+        writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
         break;
 
     case 5 :
-        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(20);
+        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(25);
         break;
 
     case 6 :
-        writeHSI(loopCount(360),1.0,0.1); Alarm.delay(20);
+        writeHSI(loopCount(360),1.0,0.1); Alarm.delay(25);
         break;
 
     case 7 :
-        writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(20);
+        writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
         break;
 
     case 8 :
-        writeHSI((loopCount(120)+300)%360,1.0,0.1); Alarm.delay(20);
+        writeHSI((loopCount(120)+300)%360,1.0,0.1); Alarm.delay(25);
         break;
 
     case 9 :
@@ -146,11 +144,19 @@ void loop() {
         break;
 
     case 10 :
-        writeRGB(PURPLE);
+        writeRGB(PINK);
         break;
 
     case 11 :
+        writeRGB(PURPLE);
+        break;
+
+    case 12 :
         writeRGB(ORANGE);
+        break;
+
+    case 13 :
+        writeRGB(YELLOW);
         break;
 
     default:
@@ -163,6 +169,9 @@ void loop() {
         displayClockTime = millis();
         digitalClockDisplay();
     }
+
+    // This Alarm.delay is needed within the loop() function in order to keep the timers/alarms alive and working
+    Alarm.delay(0);
 }
 
 // Function for the AIN0 interrupt; need to keep all the variables as volatile, can't really call other [complex] functions
@@ -178,24 +187,24 @@ ISR(ANALOG_COMP_vect) {
 }
 
 void alarmToRed(){
-    Serial.println("alarm01");
+    Serial.println("alarmToRed");
     if(curMode!=alarmState){return;}
-    crossFadeTo(RED,1000.0*60.0);
+    crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
 }
 void alarmToYellow(){
-    Serial.println("alarm02");
+    Serial.println("alarmToYellow");
     if(curMode!=alarmState){return;}
-    crossFadeTo(YELLOW,1000.0*60.0);
+    crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
 }
 void alarmToGreen(){
-    Serial.println("alarm03");
+    Serial.println("alarmToGreen");
     if(curMode!=alarmState){return;}
-    crossFadeTo(GREEN,1000.0*60.0);
+    crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
 }
 void alarmToOff(){
-    Serial.println("alarm04");
+    Serial.println("alarmToOff");
     if(curMode!=alarmState){return;}
-    crossFadeTo(OFF,1000.0*60.0);
+    crossFadeTo(OFF,1000.0*90.0);
 }
 
 //void setDynamicMode00(){
