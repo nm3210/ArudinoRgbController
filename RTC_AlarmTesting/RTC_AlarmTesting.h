@@ -12,23 +12,24 @@
 #include "DS1307RTC.h"
 //add your includes for the project RTC_AlarmTesting here
 
-
 // Constant variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;
-const uint16_t TIMECHECK_TIMEOUT = 5000;
+const uint16_t ALARMCHECK_TIMEOUT = 5000;
 const int NUMALARMS = 10;
 
+
 // Miscellaneous
-tmElements_t timeAlarms[NUMALARMS];
+long timeAlarms[NUMALARMS];
+int alarmState = 0;
 long displayClockTime = 0;
-long timeCheck = 0;
+long alarmCheck = 0;
 
 
 // Function definitions
 void digitalClockDisplay();
 void print2digits(int digits);
-time_t newTime(int hr,int min,int sec,int dy, int mnth, int yr);
-time_t newTime(int hr,int min,int sec);
+long calcTOD(int hr, int min, int sec);
+
 
 // Functions
 void digitalClockDisplay(){
@@ -46,6 +47,7 @@ void digitalClockDisplay(){
     print2digits(second());
     Serial.println();
 }
+
 void print2digits(int number) {
     if (number >= 0 && number < 10) {
         Serial.write('0');
@@ -53,28 +55,9 @@ void print2digits(int number) {
   Serial.print(number);
 }
 
-time_t newTime(int hr, int min, int sec, int dy, int mnth, int yr) {
-    tmElements_t tempTime;
-    // year can be given as full four digit year or two digits (2010 or 10 for 2010);
-    //it is converted to years since 1970
-    if (yr > 99)
-        yr = yr - 1970;
-    else
-        yr += 30;
-    tempTime.Year = yr;
-    tempTime.Month = mnth;
-    tempTime.Day = dy;
-    tempTime.Hour = hr;
-    tempTime.Minute = min;
-    tempTime.Second = sec;
-    return makeTime(tempTime);
-}
-time_t newTime(int hr, int min, int sec) {
-    tmElements_t tempTime;
-    tempTime.Hour = hr;
-    tempTime.Minute = min;
-    tempTime.Second = sec;
-    return makeTime(tempTime);
+long calcTOD(int hr, int min, int sec){
+    // Calculate the Time Of Day, in seconds, since midnight
+    return hr * SECS_PER_HOUR + min * SECS_PER_MIN + sec;
 }
 
 //Do not add code below this line
