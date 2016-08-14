@@ -114,10 +114,11 @@ void loop() {
         case 1: // timeAlarms[1] = calcTOD( 5, 45, 00); //   5:45am
         case 2: // timeAlarms[2] = calcTOD( 6, 15, 00); //   6:15am
         case 3: // timeAlarms[3] = calcTOD( 6, 30, 00); //   6:30am
-            writeHSI(count++ % 360,1.0,0.1); Alarm.delay(25);
+            writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
             break;
         case 4: // timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
-            writeHSI(count++ % 360,1.0,1.0); Alarm.delay(25);
+            writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
+
             break;
         case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
             writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
@@ -132,7 +133,7 @@ void loop() {
         break;
 
     case 3 :
-        writeHSI(count++ % 360,1.0,1.0); Alarm.delay(25);
+        writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
         break;
 
     case 4 :
@@ -140,7 +141,7 @@ void loop() {
         break;
 
     case 5 :
-        writeHSI(count++ % 360,1.0,0.1); Alarm.delay(25);
+        writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
         break;
 
     case 6 :

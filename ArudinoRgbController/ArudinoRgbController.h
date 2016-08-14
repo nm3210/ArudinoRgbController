@@ -140,6 +140,7 @@ Color adjustSat(Color c, float newSat);
 Color adjustInt(Color c, float newInt);
 bool doModeOnce();
 bool doAlarmOnce();
+int wrapCount(int mod);
 int loopCount(int n);
 
 
@@ -198,6 +199,11 @@ bool doAlarmOnce(){
     }
 }
 
+int wrapCount(int mod){
+    count = (count + 1) % mod;
+    return count;
+}
+
 int loopCount(int mod){
     if(count<0){
         countMode=0;
@@ -205,9 +211,9 @@ int loopCount(int mod){
         countMode=1;
     }
     if (countMode == 0){
-        count = (count+1);
+        count = (count + 1);
     } else if(countMode == 1){
-        count = (count-1);
+        count = (count - 1);
     }
     return count;
 }
