@@ -35,17 +35,15 @@ void setup() {
     }
     digitalClockDisplay();
 
-    // Set up alarms
-    Alarm.alarmRepeat( 5, 45, 00, alarmToRed);   // Turn color to RED
-    Alarm.alarmRepeat( 6, 15, 00, alarmToYellow);// Turn clock to YELLOW
-    Alarm.alarmRepeat( 6, 30, 00, alarmToGreen); // Turn clock to GREEN
-    Alarm.alarmRepeat( 7, 30, 00, alarmToOff);   // Turn clock to OFF
-
-//    // Set up dynamic modes
-//    Alarm.alarmRepeat( 7, 30, 00, setDynamicMode00);
-//    Alarm.alarmRepeat( 6, 00, 00, setDynamicMode01);
-//    Alarm.alarmRepeat(19, 00, 00, setDynamicMode02);
-//    Alarm.alarmRepeat(22, 00, 00, setDynamicMode03);
+    // Set up alarms (must be monotonic)
+    timeAlarms[0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+    timeAlarms[1] = calcTOD( 5, 45, 00); //   5:45am
+    timeAlarms[2] = calcTOD( 6, 15, 00); //   6:15am
+    timeAlarms[3] = calcTOD( 6, 30, 00); //   6:30am
+    timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
+    timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
+    timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
+    timeAlarms[7] = calcTOD(23, 59, 59); // The last alarm should be the latest time
 
     Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
 
@@ -57,7 +55,7 @@ void loop() {
     // Handle button press
     if(changeMode){
         changeMode = false;
-        doOnceFlag = true;
+        doModeOnceFlag = true;
         count = 0;
         curMode++;
         Serial.print("curMode = "); Serial.println(curMode);
@@ -66,57 +64,75 @@ void loop() {
 
     // Switch through different modes
     switch(curMode){
-    case offState :
-        // OFF State
-        if(doOnce()){
+    case offMode :
+        // OFF State (just don't do anything)
+        if(doModeOnce()){
             crossFade(WHITE,OFF,1500);
         }
         break;
 
-    case alarmState :
+    case alarmMode :
         // Alarm State
-        if(doOnce()){
+        if(doModeOnce()){
             crossFadeTo(WHITE,200);
             crossFadeTo(RED,200);
             crossFadeTo(YELLOW,200);
             crossFadeTo(GREEN,200);
             crossFadeTo(OFF,200);
+            waitForButton(1000);
+        }
+        if(doAlarmOnce()){
+            switch(curAlarm){
+            case 1: // timeAlarms[1] = calcTOD( 5, 45, 00);
+                crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
+                break;
+            case 2: // timeAlarms[2] = calcTOD( 6, 15, 00);
+                crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
+                break;
+            case 3: // timeAlarms[3] = calcTOD( 6, 30, 00);
+                crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
+                break;
+            case 4: // timeAlarms[4] = calcTOD( 7, 30, 00);
+                crossFadeTo(OFF,1000.0*90.0);
+                break;
+            default:
+                break;
+            }
         }
         break;
 
-    case dynamicState :
-        curMode++; // Skip dynamic mode for now
-//        // Dynamic State
-//        if(doOnce()){
-//            crossFadeTo(PINK,200);
-//            blinkRGBnTimes(PINK,2); writeRGB(PINK);
-//            crossFadeTo(PURPLE,200);
-//            blinkRGBnTimes(PURPLE,2); writeRGB(PURPLE);
-//            crossFadeTo(BLUE,200);
-//            blinkRGBnTimes(BLUE,2); writeRGB(BLUE);
-//            crossFadeTo(OFF,200);
-//        }
-//        switch(dynamicMode){
-//        case 0:
-//            writeHSI(loopCount(360),1.0,1.0); Alarm.delay(25);
-//            break;
-//        case 1:
-//            writeHSI(loopCount(360),1.0,0.1); Alarm.delay(25);
-//            break;
-//        case 2:
-//            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
-//            break;
-//        case 3:
-//            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-//            break;
-//        default:
-//            dynamicMode = 0; // Loop back
-//            break;
-//        }
+    case dynamicMode :
+        // Dynamic State
+        if(doModeOnce()){
+            crossFadeTo(PINK,250);
+            crossFadeTo(PURPLE,250);
+            crossFadeTo(BLUE,250);
+            crossFadeTo(OFF,250);
+            waitForButton(1000);
+        }
+        switch(curAlarm){
+        case 1: // timeAlarms[1] = calcTOD( 5, 45, 00); //   5:45am
+        case 2: // timeAlarms[2] = calcTOD( 6, 15, 00); //   6:15am
+        case 3: // timeAlarms[3] = calcTOD( 6, 30, 00); //   6:30am
+            writeHSI(count++ % 360,1.0,0.1); Alarm.delay(25);
+            break;
+        case 4: // timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
+            writeHSI(count++ % 360,1.0,1.0); Alarm.delay(25);
+            break;
+        case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
+            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
+            break;
+        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+        case 6: // timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
+        case 7: // timeAlarms[7] = calcTOD(23, 59, 59); // The last alarm should be the latest time
+        default:
+            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
+            break;
+        }
         break;
 
     case 3 :
-        writeHSI(loopCount(360),1.0,1.0); Alarm.delay(25);
+        writeHSI(count++ % 360,1.0,1.0); Alarm.delay(25);
         break;
 
     case 4 :
@@ -124,44 +140,34 @@ void loop() {
         break;
 
     case 5 :
-        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(25);
+        writeHSI(count++ % 360,1.0,0.1); Alarm.delay(25);
         break;
 
     case 6 :
-        writeHSI(loopCount(360),1.0,0.1); Alarm.delay(25);
-        break;
-
-    case 7 :
         writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-        break;
-
-    case 8 :
-        writeHSI((loopCount(120)+300)%360,1.0,0.1); Alarm.delay(25);
-        break;
-
-    case 9 :
-        writeRGB(WHITE);
-        break;
-
-    case 10 :
-        writeRGB(PINK);
-        break;
-
-    case 11 :
-        writeRGB(PURPLE);
-        break;
-
-    case 12 :
-        writeRGB(ORANGE);
-        break;
-
-    case 13 :
-        writeRGB(YELLOW);
+//        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(25);
         break;
 
     default:
         curMode = 0; // Loop back
         break;
+    }
+
+    // Check alarm times versus the current time
+    if(abs(millis() - alarmCheckTime) > ALARMCHECK_TIMEOUT){
+        alarmCheckTime = millis();
+
+        // Grab current time of day
+        long curTime = calcTOD(hour(),minute(),second());
+
+        // Loop over all alarms (minus one, for the comparison)
+        for(int i = 0; i<NUMALARMS-1; i++){
+            // Check if our current time is between a set of alarms
+            if(timeAlarms[i] < curTime && curTime < timeAlarms[i+1] && curAlarm!=i){
+                curAlarm = i;
+                doAlarmOnceFlag = true;
+            }
+        }
     }
 
     // Print out current time (once every second)
@@ -185,41 +191,3 @@ ISR(ANALOG_COMP_vect) {
 //        btnInterrupt();
     }
 }
-
-void alarmToRed(){
-    Serial.println("alarmToRed");
-    if(curMode!=alarmState){return;}
-    crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
-}
-void alarmToYellow(){
-    Serial.println("alarmToYellow");
-    if(curMode!=alarmState){return;}
-    crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
-}
-void alarmToGreen(){
-    Serial.println("alarmToGreen");
-    if(curMode!=alarmState){return;}
-    crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
-}
-void alarmToOff(){
-    Serial.println("alarmToOff");
-    if(curMode!=alarmState){return;}
-    crossFadeTo(OFF,1000.0*90.0);
-}
-
-//void setDynamicMode00(){
-//    if(curMode!=dynamicState){return;}
-//    dynamicMode = 0;
-//}
-//void setDynamicMode01(){
-//    if(curMode!=dynamicState){return;}
-//    dynamicMode = 1;
-//}
-//void setDynamicMode02(){
-//    if(curMode!=dynamicState){return;}
-//    dynamicMode = 2;
-//}
-//void setDynamicMode03(){
-//    if(curMode!=dynamicState){return;}
-//    dynamicMode = 3;
-//}

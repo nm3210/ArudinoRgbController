@@ -22,22 +22,18 @@ void setup();
 #endif
 
 // Constant variables
-const int offState = 0;
-const int alarmState = 1; // this is the state number of when the alarms will go off (see if-statements in loop())
-const int dynamicState = 2;
+const int offMode = 0;
+const int alarmMode = 1; // this is the state number of when the alarms will go off (see if-statements in loop())
+const int dynamicMode = 2;
+const int NUMALARMS = 8;
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;
+const uint16_t ALARMCHECK_TIMEOUT = 1000;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
 const signed int offsetSecPerYear = 5012; // time offset for DS1307 chip, I think it changes based on how much processing you're doing
-//const uint8_t BTN_DOWN = 0;
-//const uint8_t BTN_UP = 1;
-//const uint16_t DEBOUNCE = 150;
-//const uint16_t LONGPRESS_HOLDTIME = 1000;
-//enum clickState {CLICK_NULL, CLICK_SINGLE, CLICK_LONG};
 
 // Arduino pins
-const byte inputPin =  6; // AIN0 pin
 const byte ledPinR  =  9;
 const byte ledPinG  = 10;
 const byte ledPinB  = 11;
@@ -45,19 +41,14 @@ const byte ledPinB  = 11;
 // RAM-specific variables to keep track while handling the interrupts
 volatile unsigned long buttonCurTime = 0;
 volatile unsigned long buttonLastTime = 0;
-//volatile int buttonCurState = BTN_UP; // Button set to high/up
 volatile bool changeMode = false;
 
 // Button/mode variables
-//unsigned long buttonDownTime = 0;
-//unsigned long buttonUpTime = 0;
-//bool buttonClickIgnoreSingle = false;
-//bool buttonClickIgnoreLong = false;
-//int switchMode = 0;
-int curMode = alarmState;
-int dynamicMode = 0;
+int curMode = alarmMode;
+int curAlarm = 0;
 int countMode = 0;
-bool doOnceFlag = true;
+bool doModeOnceFlag = true;
+bool doAlarmOnceFlag = true;
 
 // Global HSI variables
 uint16_t hsi_Hue = 0;
@@ -65,8 +56,9 @@ float hsi_Saturation = 0.75;
 float hsi_Intensity = 0.1;
 
 // Miscellaneous
+long timeAlarms[NUMALARMS];
 long displayClockTime = 0;
-long checkClickStateNull = 0;
+long alarmCheckTime = 0;
 int count = 0;
 
 // Set up the main hsi2rgb function
@@ -95,17 +87,6 @@ public:
     const int getHash() const {return(this->hash);}
 };
 
-//class BoolHolder {
-//public:
-//    BoolHolder(bool* state) : state(state) {}
-//    bool GetState() const { return *state; } // read only
-//    bool& GetState() { return *state; } // read/write
-//
-//private:
-//    bool* state;
-//};
-//BoolHolder modeFlagPtr(&modeFlag);
-
 // Set up all the basic colors, these colors are in HSI
 //                 color   (hue,  sat,  int);
 static const Color RED     (  0, 1.00, 1.00);
@@ -130,15 +111,6 @@ static const Color PURPLE = VIOLET;
 Color PREV (0,0,0); // create the 'previous' color variable
 
 // Add all the other functions
-void alarmToRed();
-void alarmToYellow();
-void alarmToGreen();
-void alarmToOff();
-void setDynamicMode00();
-void setDynamicMode01();
-void setDynamicMode02();
-void setDynamicMode03();
-
 void rtcCorrection();
 void digitalClockDisplay();
 void print2digits(int digits);
@@ -153,23 +125,13 @@ void crossFadeHSI(int h1, float s1, float i1, int h2, float s2, float i2, long n
 void crossFade(Color c1, Color c2, long n, int d);
 void crossFade(Color c1, Color c2, float msec);
 void crossFadeTo(Color c1, float msec);
+void waitForButton(unsigned long i);
+long calcTOD(int hr, int min, int sec);
 Color adjustSat(Color c, float newSat);
 Color adjustInt(Color c, float newInt);
-//void btnInterrupt();
-bool doOnce();
-//bool doOnce(BoolHolder b);
+bool doModeOnce();
+bool doAlarmOnce();
 int loopCount(int n);
-//clickState checkBtnState();
-//float expCurve(float c);
-//int expCurve(int c);
-//
-//const double expConvert = 0.0217457938712615;
-//float expCurve(float c){ // Convert ranges 0-1 (float)
-//	return ((float) exp(c*255 * expConvert) - 1)/255;
-//}
-//int expCurve(int c){ // Convert ranges 0-255 (int)
-//	return ceil((float) exp(c * expConvert) - 1);
-//}
 
 
 void rtcCorrection(){
@@ -208,29 +170,22 @@ void print2digits(int number) {
   Serial.print(number);
 }
 
-
-
-//void btnInterrupt() {
-//    changeMode = true;
-//}
-
-bool doOnce(){
-    if(doOnceFlag){
-        doOnceFlag = false;
+bool doModeOnce(){
+    if(doModeOnceFlag){
+        doModeOnceFlag = false;
         return true;
     } else {
         return false;
     }
 }
-//bool doOnce(BoolHolder bh){
-//    if(bh.GetState()){
-//        count = 0; // reset the loop counter
-//        bh.GetState() = false;
-//        return true;
-//    } else {
-//        return false;
-//    }
-//}
+bool doAlarmOnce(){
+    if(doAlarmOnceFlag){
+        doAlarmOnceFlag = false;
+        return true;
+    } else {
+        return false;
+    }
+}
 
 int loopCount(int mod){
     if(count<0){
@@ -245,29 +200,6 @@ int loopCount(int mod){
     }
     return count;
 }
-
-//clickState checkBtnState(){
-//    clickState ClickState = CLICK_NULL;
-//    long curTime = millis();
-//    // Button goes from Up to Down
-//    if((buttonCurState == BTN_DOWN) && ((buttonCurTime - buttonLastTime) > DEBOUNCE)){
-//        buttonDownTime = buttonCurTime;
-//        buttonClickIgnoreSingle = false;
-//        buttonClickIgnoreLong = false;
-//    }
-//    // Button goes from Down to Up (single click)
-//    if((buttonCurState == BTN_UP) && !buttonClickIgnoreSingle && ((buttonCurTime - buttonUpTime) > DEBOUNCE)){
-//        buttonUpTime = buttonCurTime;
-//        buttonClickIgnoreLong = true;
-//        ClickState = CLICK_SINGLE;
-//    }
-//    // Check for long press (Down + time)
-//    if (buttonCurState == BTN_DOWN && ((curTime - buttonDownTime) > LONGPRESS_HOLDTIME) && (buttonDownTime != 0) && ((buttonCurTime - buttonLastTime) > DEBOUNCE) && !buttonClickIgnoreLong){
-//        buttonClickIgnoreSingle = true;
-//        ClickState = CLICK_LONG;
-//    }
-//    return ClickState;
-//}
 
 void writeRGB(int r, int g, int b) {
     // Write the pin values out (this assumes high is off, and low is on);
@@ -354,15 +286,6 @@ void crossFadeHSI(int h1, float s1, float i1,
         alpha = acos((pow(rho2,2)+pow(length,2)-pow(rho1,2))/(2.0*rho2*length));
     }
 
-//    Serial.print("crossFadeHSI: h1="); Serial.print(h1);
-//    Serial.print(", h2="); Serial.print(h2);
-//    Serial.print(", rho1="); Serial.print(rho1);
-//    Serial.print(", rho2="); Serial.print(rho2);
-//    Serial.print(", ccw="); Serial.print(ccw);
-//    Serial.print(", gamma="); Serial.print(gamma);
-//    Serial.print(", length="); Serial.print(length);
-//    Serial.print(", alpha="); Serial.println(alpha);
-
     float newRho;
     uint16_t newTheta;
     // Loop through the number of steps
@@ -394,15 +317,6 @@ void crossFadeHSI(int h1, float s1, float i1,
 
         float newSat = s1+(s2-s1)*((i-1.0)/(steps-1.0)); // simple interpolation
 //        float newInten = i1+(i2-i1)*((i-1.0)/(steps-1.0)); // simple interpolation
-
-//        Serial.print("    crossFadeHSI: i="); Serial.print(i);
-//        Serial.print(", tempRho="); Serial.print(tempRho);
-//        Serial.print(", newRho="); Serial.print(newRho);
-//        Serial.print(", newTheta1="); Serial.print(newTheta);
-//        Serial.print(", newTheta1="); Serial.print(newTheta);
-//        Serial.print(", newTheta2="); Serial.print(newTheta);
-//        Serial.print(", newSat="); Serial.println(newSat);
-
         writeHSI(newTheta, newSat, newRho);
         Alarm.delay(dur);
 
@@ -431,6 +345,22 @@ void crossFade(Color c1, Color c2, float msec){
 }
 void crossFadeTo(Color c1, float msec){
     crossFade(PREV,c1,msec);
+}
+void waitForButton(unsigned long i){
+    unsigned long trackTime = millis();
+    boolean waitLoop = true;
+    while(waitLoop){
+        if(changeMode){writeRGB(OFF);waitLoop = false;return;};
+        if(abs(millis() - trackTime) > i){
+            waitLoop = false;
+            return;
+        }
+        Alarm.delay(0);
+    }
+}
+long calcTOD(int hr, int min, int sec){
+    // Calculate the Time Of Day, in seconds, since midnight
+    return hr * SECS_PER_HOUR + min * SECS_PER_MIN + sec;
 }
 
 Color adjustSat(Color c, float newSat){
