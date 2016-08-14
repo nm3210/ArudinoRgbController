@@ -122,9 +122,9 @@ void loop() {
         case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
             writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
             break;
-        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00);
         case 6: // timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
-        case 7: // timeAlarms[7] = calcTOD(23, 59, 59); // The last alarm should be the latest time
+        case 7: // timeAlarms[7] = calcTOD(23, 59, 59);
         default:
             writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
             break;
@@ -187,7 +187,5 @@ ISR(ANALOG_COMP_vect) {
     if (abs(buttonCurTime - buttonLastTime) > 250) {
         buttonLastTime = buttonCurTime;
         changeMode = true;
-        // Call our interrupt function
-//        btnInterrupt();
     }
 }

@@ -52,8 +52,8 @@ bool doAlarmOnceFlag = true;
 
 // Global HSI variables
 uint16_t hsi_Hue = 0;
-float hsi_Saturation = 0.75;
-float hsi_Intensity = 0.1;
+float hsi_Saturation = 1.0;
+float hsi_Intensity = 1.0;
 
 // Miscellaneous
 long timeAlarms[NUMALARMS];
@@ -61,34 +61,41 @@ long displayClockTime = 0;
 long alarmCheckTime = 0;
 int count = 0;
 
-// Set up the main hsi2rgb function
+
+// Initialize the main hsi2rgb function
 void hsi2rgb(int H, float S, float I, int* rgb);
+
 
 // Create the color structure
 struct Color {
-private:
-    int hash;
 public:
-    float sat, intensity;
-    uint16_t hue;
-    uint8_t red, green, blue;
+    float sat, intensity;       // ranges from [0.0 to 1.0]
+    uint16_t hue;               // ranges from [0 to 360]
+    uint8_t red, green, blue;   // ranges from [0 to 255]
 
     Color(int h, float s, float i){
     	int rgbTemp[3];
     	hue = h; sat = s; intensity = i;
+    	// Convert HSI to RGB
     	hsi2rgb(hue, sat, intensity, rgbTemp);
     	red = rgbTemp[0];
     	green = rgbTemp[1];
     	blue = rgbTemp[2];
+    	// Store hash
     	hash = (hue+1)*(red+1)*(green+1)*(blue+1);
     }
 
-    bool operator==(const Color &other) { return(this->hash == other.getHash()); }
+    bool operator == (const Color &other) { return(this->hash == other.getHash()); }
+    bool operator != (const Color &other) { return(this->hash != other.getHash()); }
+
+private:
+    int hash;
     const int getHash() const {return(this->hash);}
 };
 
+
 // Set up all the basic colors, these colors are in HSI
-//                 color   (hue,  sat,  int);
+//  -->  -->  -->  color   (hue,  sat,  int);
 static const Color RED     (  0, 1.00, 1.00);
 static const Color GREEN   (120, 1.00, 1.00);
 static const Color BLUE    (240, 1.00, 1.00);
@@ -97,9 +104,10 @@ static const Color MAGENTA (300, 1.00, 1.00);
 static const Color YELLOW  ( 60, 1.00, 1.00);
 static const Color CYAN    (180, 1.00, 1.00);
 
-static const Color ORANGE  (  4, 1.00, 0.33);
+static const Color ORANGE  ( 15, 1.00, 1.00);
 static const Color INDIGO  (252, 1.00, 0.20);
-static const Color VIOLET  (252, 1.00, 0.40);
+static const Color VIOLET  (250, 1.00, 1.00);
+//static const Color VIOLET  (252, 1.00, 0.40);
 static const Color PINK    (277, 0.90, 1.00);
 
 static const Color WHITE   (  0, 0.00, 1.00);
@@ -110,7 +118,8 @@ static const Color OFF = BLACK;
 static const Color PURPLE = VIOLET;
 Color PREV (0,0,0); // create the 'previous' color variable
 
-// Add all the other functions
+
+// Function declarations
 void rtcCorrection();
 void digitalClockDisplay();
 void print2digits(int digits);
@@ -134,6 +143,7 @@ bool doAlarmOnce();
 int loopCount(int n);
 
 
+// Functions
 void rtcCorrection(){
     digitalClockDisplay();
     Serial.print("rtcCorrection: ");
@@ -178,6 +188,7 @@ bool doModeOnce(){
         return false;
     }
 }
+
 bool doAlarmOnce(){
     if(doAlarmOnceFlag){
         doAlarmOnceFlag = false;
@@ -209,6 +220,7 @@ void writeRGB(int r, int g, int b) {
 }
 
 void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
+    // From: http://blog.saikoled.com/post/43693602826/why-every-led-light-should-be-using-hsi
     int r, g, b; float Hue;
     Hue = fmod(h,360); // cycle H around to 0-360 degrees
     Hue = M_PI*Hue/(float)180; // Convert to radians.
@@ -239,7 +251,6 @@ void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
 void writeHSI(int h, float s, float i) {
     int rgbTemp[3];
     hsi2rgb(h,s,i,rgbTemp);
-//    hsi2rgb(h,s,expCurve(i),rgbTemp);
     writeRGB(rgbTemp);
 }
 
@@ -250,7 +261,6 @@ void writeRGB(int rgb[]){
 void writeRGB(Color c){
     PREV = c; // Save the new color to the 'previous' value
     writeRGB(c.red, c.green, c.blue);
-//    writeRGB(expCurve(c.red),expCurve(c.green),expCurve(c.blue));
 }
 
 void blinkRGB(Color c){
@@ -335,6 +345,7 @@ void crossFade(Color c1, Color c2, long steps, int dur){
     crossFadeHSI(c1.hue, c1.sat, c1.intensity,
                  c2.hue, c2.sat, c2.intensity, steps, dur);
 }
+
 void crossFade(Color c1, Color c2, float msec){
     int maxDelay = 5; // set max delay to 5ms (wiggle room)
     if(msec<maxDelay){return;};
@@ -343,9 +354,13 @@ void crossFade(Color c1, Color c2, float msec){
 
     crossFade(c1, c2, numSteps, timeStep);
 }
+
 void crossFadeTo(Color c1, float msec){
-    crossFade(PREV,c1,msec);
+    if(PREV!=c1){
+        crossFade(PREV,c1,msec);
+    }
 }
+
 void waitForButton(unsigned long i){
     unsigned long trackTime = millis();
     boolean waitLoop = true;
@@ -358,6 +373,7 @@ void waitForButton(unsigned long i){
         Alarm.delay(0);
     }
 }
+
 long calcTOD(int hr, int min, int sec){
     // Calculate the Time Of Day, in seconds, since midnight
     return hr * SECS_PER_HOUR + min * SECS_PER_MIN + sec;
@@ -366,8 +382,10 @@ long calcTOD(int hr, int min, int sec){
 Color adjustSat(Color c, float newSat){
     return Color(c.hue,newSat,c.intensity);
 }
+
 Color adjustInt(Color c, float newInt){
     return Color(c.hue,c.sat,newInt);
 }
+
 //Do not add code below this line
 #endif /* _ArudinoRgbController_H_ */

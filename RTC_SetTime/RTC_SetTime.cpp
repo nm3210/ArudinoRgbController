@@ -20,13 +20,13 @@ void setup() {
     digitalWrite(A3,HIGH);// Turn on the +5vcc for the DS1307
 
     // Enable the AIN0 comparator interrupt (called with the ISR(ANALOG_COMP_vect) function below)
-    ACSR = (0 << ACD) |     // Analog Comparator Enabled
-            (0 << ACBG) |   // Analog Comparator Bandgap Select: AIN0 is applied to the positive input
-            (0 << ACO) |    // Analog Comparator Output: Off
-            (1 << ACI) |    // Analog Comparator Interrupt Flag: Clear Pending Interrupt
-            (1 << ACIE) |   // Analog Comparator Interrupt: Enabled
-            (0 << ACIC) |   // Analog Comparator Input Capture: Disabled
-            (1 << ACIS1) | (0 << ACIS0); // Analog Comparator Interrupt Mode: Comparator Interrupt on Falling Output Edge
+    ACSR = (0 << ACD)  |  // Analog Comparator Enabled
+           (0 << ACBG) |  // Analog Comparator Bandgap Select: AIN0 is applied to the positive input
+           (0 << ACO)  |  // Analog Comparator Output: Off
+           (1 << ACI)  |  // Analog Comparator Interrupt Flag: Clear Pending Interrupt
+           (1 << ACIE) |  // Analog Comparator Interrupt: Enabled
+           (0 << ACIC) |  // Analog Comparator Input Capture: Disabled
+           (1 << ACIS1)| (0 << ACIS0); // Analog Comparator Interrupt Mode: Comparator Interrupt on Falling Output Edge
 
     bool parse = false;
     bool config = false;
