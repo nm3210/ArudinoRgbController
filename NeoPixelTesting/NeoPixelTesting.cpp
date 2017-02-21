@@ -6,6 +6,8 @@
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
+float adjustBrightnessVal = 0.1;
+
 //The setup function is called once at startup of the sketch
 void setup() {
     // Enable the AIN0 comparator interrupt (called with the ISR(ANALOG_COMP_vect) function below)
@@ -35,37 +37,43 @@ void loop() {
         curMode++;
         Serial.print("curMode = "); Serial.println(curMode);
 
-        blinkRGBWnTimes(adjustInt(WHITE,0.005),2);
+        blinkRGBWnTimes(WHITE,2);
     }
 
     // Switch through different modes
     switch(curMode){
     case 0:
-        writeRGBW(adjustInt(RED,0.005));
+        if(doModeOnce()){
+            crossFade(WHITE,OFF,1500);
+        }
         break;
     case 1:
-        writeRGBW(adjustInt(GREEN,0.005));
+        if(doModeOnce()){
+            crossFadeTo(WHITE,200);
+            crossFadeTo(RED,200);
+            crossFadeTo(YELLOW,200);
+            crossFadeTo(GREEN,200);
+            crossFadeTo(OFF,250);
+            waitForButton(1000);
+        }
         break;
     case 2:
-        writeRGBW(adjustInt(BLUE,0.005));
+        writeHSI(wrapCount(360),1.0,1.0);
+        delay(25);
         break;
     case 3:
-        writeRGBW(adjustInt(WHITE,0.005));
+        writeHSI(RED.hue,1.0,loopCount(255)/255.0);
+        delay(5);
         break;
     case 4:
-        writeRGBW(adjustInt(RED,0.005));
-        delay(2);
-        writeRGBW(adjustInt(YELLOW,0.005));
-        delay(2);
-        writeRGBW(adjustInt(GREEN,0.005));
-        delay(2);
-        writeRGBW(adjustInt(CYAN,0.005));
-        delay(2);
-        writeRGBW(adjustInt(BLUE,0.005));
-        delay(2);
-        writeRGBW(adjustInt(MAGENTA,0.005));
-        delay(2);
+        writeHSI(GREEN.hue,1.0,loopCount(255)/255.0);
+        delay(5);
         break;
+    case 5:
+        writeHSI(BLUE.hue,1.0,loopCount(255)/255.0);
+        delay(5);
+        break;
+
 
     default:
         curMode = 0; // Loop back
@@ -129,6 +137,10 @@ void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
     pixels.show();
 }
 
+Color adjustSat(Color c, float newSat){
+    return Color(c.hue,newSat,c.intensity);
+}
+
 Color adjustInt(Color c, float newInt){
     return Color(c.hue,c.sat,newInt);
 }
@@ -166,9 +178,7 @@ void hsi2rgbw(int h, float Sat, float Inten, int* rgbw) {
 }
 
 void writeHSI(int h, float s, float i) {
-    int rgbwTemp[3];
-    hsi2rgbw(h,s,i,rgbwTemp);
-    writeRGBW(rgbwTemp);
+    writeRGBW(Color(h,s,i));
 }
 
 void writeRGBW(int rgbw[]){
@@ -176,6 +186,9 @@ void writeRGBW(int rgbw[]){
 }
 
 void writeRGBW(Color c){
+    if(adjustBrightnessVal!=1.0){
+        c = adjustInt(c,adjustBrightnessVal);
+    }
     PREV = c; // Save the new color to the 'previous' value
     writeRGBW(c.red, c.green, c.blue, c.white);
 }
@@ -195,4 +208,117 @@ void blinkRGBWnTimes(Color c, int count){
     for(int i=0;i<count;i++){
         blinkRGBW(c);
     }
+}
+
+void crossFadeHSI(int h1, float s1, float i1,
+                  int h2, float s2, float i2, long steps, int dur){
+    if(changeMode){writeRGBW(OFF);return;}; // Check for button press
+    float rho1 = i1;//(i1!=0)?i1:LOWERLIMIT;
+    float rho2 = i2;//(i2!=0)?i2:LOWERLIMIT;
+
+    bool ccw = fmod((h2-h1+360.0),360.0) < 180.0;
+    float gamma = (180 - abs(fmod(abs(h1-h2),360.0) - 180.0));
+    float length = sqrt(pow(rho1,2)-2.0*rho1*rho2*cos(radians(gamma))+pow(rho2,2));
+    float alpha;
+    if(rho1 != 0){
+        alpha = acos((pow(rho1,2)+pow(length,2)-pow(rho2,2))/(2.0*rho1*length));
+    } else {
+        alpha = acos((pow(rho2,2)+pow(length,2)-pow(rho1,2))/(2.0*rho2*length));
+    }
+
+    float newRho;
+    uint16_t newTheta;
+    // Loop through the number of steps
+    for (int i = 1; i <= steps; i++) {
+        if(changeMode){writeRGBW(OFF);return;}; // Check for button press (so you can escape the loop)
+
+        float tempRho = length*((i-1.0)/(steps-1.0)); // calculate one part of the line
+
+        if (tempRho != 0){
+            newRho = sqrt(pow(rho1,2) - 2.0*rho1*tempRho*cos(alpha)+pow(tempRho,2));
+        } else {
+            newRho = rho1;
+        }
+        if ((rho1 != 0) && (newRho != 0)){
+            float acosarg = (pow(rho1,2)+pow(newRho,2)+-pow(tempRho,2))/(2.0*rho1*newRho);
+            newTheta = round(degrees((round(acosarg*1000000)/1000000 == 1)?0:acos(acosarg))*1000)/1000;
+        } else {
+            if(fmod(h1-h2,360)<180){
+                newTheta = fmod(h1-h2,360);
+            } else {
+                newTheta = -fmod(h1-h2,360);
+            }
+        }
+        if (ccw){
+            newTheta = fmod(h1+newTheta,360.0);
+        } else {
+            newTheta = fmod(h1-newTheta+360,360.0);
+        }
+
+        float newSat = s1+(s2-s1)*((i-1.0)/(steps-1.0)); // simple interpolation
+//        float newInten = i1+(i2-i1)*((i-1.0)/(steps-1.0)); // simple interpolation
+        writeHSI(newTheta, newSat, newRho);
+        delay(dur);
+
+    }
+}
+
+void crossFade(Color c1, Color c2, long steps, int dur){
+    if(c1 == OFF){
+        c1.hue = c2.hue;
+        c1.sat = c2.sat;
+    } else if(c2 == OFF){
+        c2.hue = c1.hue;
+        c2.sat = c1.sat;
+    }
+    PREV = c2; // Save the new color to the 'previous' value
+    crossFadeHSI(c1.hue, c1.sat, c1.intensity,
+                 c2.hue, c2.sat, c2.intensity, steps, dur);
+}
+
+void crossFade(Color c1, Color c2, float msec){
+    int maxDelay = 5; // set max delay to 5ms (wiggle room)
+    if(msec<maxDelay){return;};
+    int timeStep = max(maxDelay, msec / 100); // default to 100 steps (pretty smooth)
+    long numSteps = (long) (msec/timeStep);
+
+    crossFade(c1, c2, numSteps, timeStep);
+}
+
+void crossFadeTo(Color c1, float msec){
+    if(PREV!=c1){
+        crossFade(PREV,c1,msec);
+    }
+}
+
+void waitForButton(unsigned long i){
+    unsigned long trackTime = millis();
+    boolean waitLoop = true;
+    while(waitLoop){
+        if(changeMode){writeRGBW(OFF);waitLoop = false;return;};
+        if(abs(millis() - trackTime) > i){
+            waitLoop = false;
+            return;
+        }
+        delay(0);
+    }
+}
+
+int wrapCount(uint16_t mod){
+    count = (count + 1) % mod;
+    return count;
+}
+
+int loopCount(uint16_t mod){
+    if(count<=0){
+        countMode=0;
+    } else if(count>mod){
+        countMode=1;
+    }
+    if (countMode == 0){
+        count = (count + 1);
+    } else if(countMode == 1){
+        count = (count - 1);
+    }
+    return count;
 }

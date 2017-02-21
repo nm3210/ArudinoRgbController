@@ -96,6 +96,13 @@ void writeRGBW(Color c);
 void blinkRGBW(Color c);
 void blinkRGBW(Color c, int d);
 void blinkRGBWnTimes(Color c, int count);
+void crossFadeHSI(int h1, float s1, float i1, int h2, float s2, float i2, long n, int d);
+void crossFade(Color c1, Color c2, long n, int d);
+void crossFade(Color c1, Color c2, float msec);
+void crossFadeTo(Color c1, float msec);
+void waitForButton(unsigned long i);
+int wrapCount(uint16_t mod);
+int loopCount(uint16_t n);
 
 //Do not add code below this line
 #endif /* _NeoPixelTesting_H_ */
