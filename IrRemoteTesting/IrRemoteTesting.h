@@ -112,19 +112,34 @@
 #define CTRL3BTN_PLAY        0x313599EC
 #define CTRL3BTN_PAUSE       0xD922D768
 
+// LightMode enum
+enum LightColor{
+    MODE_OFF,
+    SOLID_RED, SOLID_GREEN, SOLID_BLUE, SOLID_WHITE,
+    SOLID_CYAN, SOLID_YELLOW, SOLID_MAGENTA,
+    SOLID_COLOR1, SOLID_COLOR2, SOLID_COLOR3,
+    SOLID_COLOR4, SOLID_COLOR5, SOLID_COLOR6,
+    SOLID_COLOR7, SOLID_COLOR8, SOLID_COLOR9,
+    MODE1, MODE2, MODE3, MODE4, MODE5, MODE6
+};
+
+#define numBrightLevels 10
+uint8_t brightnessLevels[numBrightLevels] = {
+//    1, 2, 5, 11, 24, 52, 116, 255 // 8
+    1, 2, 3, 6, 12, 22, 40, 75, 139, 255 // 10
+//    1, 2, 3, 4, 5, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
+};
+
 // Constant variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
 
-// RAM-specific variables to keep track while handling the interrupts
-volatile unsigned long interruptCurTime = 0;
-volatile unsigned long interruptLastTime = 0;
-volatile bool changeMode = false;
-
 // Button/mode variables
-int curMode = 0;
+uint32_t lastButtonPressed = 0;
+LightColor prevMode = MODE_OFF;
+LightColor  curMode = MODE_OFF;
 int countMode = 0;
 bool doModeOnceFlag = true;
 
@@ -188,7 +203,11 @@ Color PREV (0,0,0); // create the 'previous' color variable
 
 // Function declarations
 bool handleInterrupt();
-bool decodeIrSignal();
+bool checkBrightnessChange();
+bool checkModesSpecial();
+bool checkModes();
+void changeMode(LightColor newMode);
+long decodeIrSignal();
 void digitalClockDisplay();
 void print2digits(int digits);
 bool doModeOnce();

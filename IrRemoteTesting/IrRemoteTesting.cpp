@@ -10,8 +10,9 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRBW + NEO_K
 IRrecv irrecv(IR_PIN);
 decode_results results;
 
-float adjustBrightnessVal = 1.0;
-float adjustSaturationVal = 1.0;
+uint8_t adjustBrightnessVal = 0;
+uint8_t adjustSaturationVal = numBrightLevels-1;
+int curHueVal = 0;
 
 void setup() {
     // Turn on serial port
@@ -100,111 +101,161 @@ void loop() {
 
 bool handleInterrupt(){
     bool changedModes = false;
-    if(decodeIrSignal()){
-        changedModes = true;
-        count = 0;
-        Serial.print("curMode = "); Serial.println(curMode);
+
+    lastButtonPressed = decodeIrSignal();
+
+    // Check for valid button press (meets one of our cases)
+    if(lastButtonPressed!=0){
+        checkBrightnessChange();
+        changedModes |= checkModesSpecial();
+        changedModes |= checkModes();
     }
+
+    if(changedModes && curMode!=prevMode && curMode!=MODE_OFF){
+        Serial.print("curMode = "); Serial.println(curMode);
+        doModeOnceFlag = true;
+        count = 0;
+//        blinkRGBWnTimes(WHITE,2);
+    }
+
     return changedModes;
 }
 
-bool decodeIrSignal(){
-    bool changeModes = false;
+bool checkBrightnessChange(){
+    switch(lastButtonPressed){
+//    case CTRL1BTN_UP: case CTRL1BTN2_UP:
+    case CTRL2BTN_BRIGHTUP: case CTRL2BTN2_BRIGHTUP:
+    case CTRL3BTN_VOLUP:
+        //do bright increase
+//        Serial.println("Button: Brightness UP");
+        adjustBrightnessVal = constrain(adjustBrightnessVal + 1,0,numBrightLevels-1);
+        break;
+//    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
+    case CTRL2BTN_BRIGHTDOWN: case CTRL2BTN2_BRIGHTDOWN:
+    case CTRL3BTN_VOLDOWN:
+        // do bright decrease
+//        Serial.println("Button: Brightness DOWN");
+        adjustBrightnessVal = constrain(adjustBrightnessVal - 1,0,numBrightLevels-1);
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+bool checkModesSpecial(){
+    switch(lastButtonPressed){
+    case CTRL2BTN_OFF: case CTRL2BTN2_OFF:
+//        Serial.println("Button: OFF (hard)");
+        if(curMode!=MODE_OFF){
+            changeMode(MODE_OFF);
+        } else {
+            return false;
+        }
+        break;
+    case CTRL2BTN_ON: case CTRL2BTN2_ON:
+//        Serial.println("Button: ON (hard)");
+        if(curMode==MODE_OFF){
+            changeMode(prevMode);
+        } else {
+            return false;
+        }
+        break;
+
+    case CTRL2BTN_FLASH: case CTRL2BTN2_FLASH:
+    case CTRL2BTN_STROBE: case CTRL2BTN2_STROBE:
+    case CTRL2BTN_FADE: case CTRL2BTN2_FADE:
+    case CTRL2BTN_SMOOTH: case CTRL2BTN2_SMOOTH:
+        changeMode(MODE1);
+        break;
+
+    case CTRL1BTN_UP: case CTRL1BTN2_UP:
+        adjustSaturationVal = constrain(adjustSaturationVal + 1,0,numBrightLevels-1);
+        Serial.print("New sat value: "); Serial.println(((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
+        return false;
+    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
+        adjustSaturationVal = constrain(adjustSaturationVal - 1,0,numBrightLevels-1);
+        Serial.print("New sat value: "); Serial.println(((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
+        return false;
+    case CTRL1BTN_LEFT: case CTRL1BTN2_LEFT:
+//        Serial.print("Cur hue value: "); Serial.print(curHueVal);
+        curHueVal = (((curHueVal-1) % 360) + 360) % 360; // (((curHueVal-1) % 360) + 360) % 360
+        Serial.print("New hue value: "); Serial.println(curHueVal);
+        return false;
+    case CTRL1BTN_RIGHT: case CTRL1BTN2_RIGHT:
+//        Serial.print("Cur hue value: "); Serial.print(curHueVal);
+        curHueVal = (((curHueVal+1) % 360) + 360) % 360;
+        Serial.print("New hue value: "); Serial.println(curHueVal);
+        return false;
+    default:
+        return false;
+    }
+    return true;
+}
+bool checkModes(){
+    switch(lastButtonPressed){
+    case CTRL2BTN_RED: case CTRL2BTN2_RED:
+//        Serial.println("Mode: SOLID_RED");
+        changeMode(SOLID_RED); break;
+    case CTRL2BTN_GREEN: case CTRL2BTN2_GREEN:
+//        Serial.println("Mode: SOLID_GREEN");
+        changeMode(SOLID_GREEN); break;
+    case CTRL2BTN_BLUE: case CTRL2BTN2_BLUE:
+//        Serial.println("Mode: SOLID_BLUE");
+        changeMode(SOLID_BLUE); break;
+    case CTRL2BTN_WHITE: case CTRL2BTN2_WHITE:
+//        Serial.println("Mode: SOLID_WHITE");
+        changeMode(SOLID_WHITE); break;
+
+    case CTRL2BTN_ROW3_1: case CTRL2BTN2_ROW2_1:
+        changeMode(SOLID_COLOR1); break;
+    case CTRL2BTN_ROW3_2: case CTRL2BTN2_ROW2_2:
+        changeMode(SOLID_COLOR2); break;
+    case CTRL2BTN_ROW3_3: case CTRL2BTN2_ROW2_3:
+        changeMode(SOLID_COLOR3); break;
+    case CTRL2BTN_ROW4_1: case CTRL2BTN2_ROW3_1:
+        changeMode(SOLID_COLOR4); break;
+    case CTRL2BTN_ROW4_2: case CTRL2BTN2_ROW3_2:
+        changeMode(SOLID_COLOR5); break;
+    case CTRL2BTN_ROW4_3: case CTRL2BTN2_ROW3_3:
+        changeMode(SOLID_COLOR6); break;
+    case CTRL2BTN_ROW5_1: case CTRL2BTN2_ROW4_1:
+        changeMode(SOLID_COLOR7); break;
+    case CTRL2BTN_ROW5_2: case CTRL2BTN2_ROW4_2:
+        changeMode(SOLID_COLOR8); break;
+    case CTRL2BTN_ROW5_3: case CTRL2BTN2_ROW4_3:
+        changeMode(SOLID_COLOR9); break;
+
+    case CTRL2BTN_ROW6_1: case CTRL2BTN2_ROW5_1:
+        changeMode(SOLID_YELLOW); break;
+    case CTRL2BTN_ROW6_2: case CTRL2BTN2_ROW5_2:
+        changeMode(SOLID_CYAN); break;
+    case CTRL2BTN_ROW6_3: case CTRL2BTN2_ROW5_3:
+        changeMode(SOLID_MAGENTA); break;
+    default:
+        return false;
+    }
+    return true;
+}
+
+void changeMode(LightColor newMode){
+    if(curMode!=MODE_OFF){
+        prevMode = curMode;
+    }
+    curMode = newMode;
+}
+
+long decodeIrSignal(){
+    uint32_t tempResults = 0;
     while (!irrecv.isIdle()); // Listen to the whole IR signal coming in (very important!)
     if (irrecv.decode(&results)) {
-        if (results.value != 0xFFFFFFFF) {
-            Serial.println(results.value, HEX); //print the value
+        tempResults = results.value;
+        if (tempResults != 0xFFFFFFFF) {
+            Serial.println(tempResults, HEX); //print the value
         }
-        changeModes = true;
-        switch(results.value){
-        case 0xFFFFFFFF:
-        default:
-            changeModes = false;
-            break;
-
-        case CTRL1BTN_1:
-            Serial.println("Button 1");
-            curMode = 0;
-            break;
-
-        case CTRL1BTN_2:
-            Serial.println("Button 2");
-            curMode = 1;
-            break;
-
-        case CTRL1BTN_3:
-            Serial.println("Button 3");
-            curMode = 2;
-            break;
-
-        case CTRL1BTN_4:
-            Serial.println("Button 4");
-            curMode = 3;
-            break;
-
-        case CTRL1BTN_5:
-            Serial.println("Button 5");
-            curMode = 4;
-            break;
-
-        case CTRL1BTN_6:
-            Serial.println("Button 6");
-            curMode = 5;
-            break;
-
-        case CTRL1BTN_7:
-            Serial.println("Button 7");
-            curMode = 6;
-            break;
-
-        case CTRL1BTN_8:
-            Serial.println("Button 8");
-            curMode = 7;
-            break;
-
-        case CTRL1BTN_9:
-            Serial.println("Button 9");
-            curMode = 8;
-            break;
-
-        case CTRL1BTN_0:
-            Serial.println("Button 0");
-            curMode = 9;
-            break;
-
-        case CTRL1BTN_ASTRX:
-            Serial.println("Button ASTERIX");
-            break;
-
-        case CTRL1BTN_POUND:
-            Serial.println("Button POUND");
-            break;
-
-        case CTRL1BTN_SELECT:
-            Serial.println("Button OK");
-            break;
-
-        case CTRL1BTN_UP:
-            Serial.println("Button UP");
-            break;
-
-        case CTRL1BTN_DOWN:
-            Serial.println("Button DOWN");
-            break;
-
-        case CTRL1BTN_LEFT:
-            Serial.println("Button LEFT");
-            break;
-
-        case CTRL1BTN_RIGHT:
-            Serial.println("Button RIGHT");
-            break;
-        }
-
         // Restart the ir receiver state
         irrecv.resume();
     }
-    return changeModes;
+    return tempResults;
 }
 
 void digitalClockDisplay(){
@@ -340,7 +391,8 @@ void crossFadeHSI(int h1, float s1, float i1,
     uint16_t newTheta;
     // Loop through the number of steps
     for (int i = 1; i <= steps; i++) {
-        if(changeMode){writeRGBW(OFF);return;}; // Check for button press (so you can escape the loop)
+        if(handleInterrupt()){return;};
+//        if(handleInterrupt()){writeRGBW(OFF);return;}; // Check for button press (so you can escape the loop)
 
         float tempRho = length*((i-1.0)/(steps-1.0)); // calculate one part of the line
 
