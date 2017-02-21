@@ -35,42 +35,35 @@ void loop() {
         curMode++;
         Serial.print("curMode = "); Serial.println(curMode);
 
-        fullColor(0,0,0,1);
-        delay(25);
-        fullColor(0,0,0,0);
-        delay(25);
-        fullColor(0,0,0,1);
-        delay(25);
-        fullColor(0,0,0,0);
-        delay(25);
+        blinkRGBnTimes(adjustInt(WHITE,0.005),2);
     }
 
     // Switch through different modes
     switch(curMode){
     case 0:
-        fullColor(1,0,0,0);
+        writeRGB(adjustInt(RED,0.005));
         break;
     case 1:
-        fullColor(0,1,0,0);
+        writeRGB(adjustInt(GREEN,0.005));
         break;
     case 2:
-        fullColor(0,0,1,0);
+        writeRGB(adjustInt(BLUE,0.005));
         break;
     case 3:
-        fullColor(0,0,0,1);
+        writeRGB(adjustInt(WHITE,0.005));
         break;
     case 4:
-        fullColor(1,0,0,0);
+        writeRGB(adjustInt(RED,0.005));
         delay(2);
-        fullColor(1,1,0,0);
+        writeRGB(adjustInt(YELLOW,0.005));
         delay(2);
-        fullColor(0,1,0,0);
+        writeRGB(adjustInt(GREEN,0.005));
         delay(2);
-        fullColor(0,1,1,0);
+        writeRGB(adjustInt(CYAN,0.005));
         delay(2);
-        fullColor(0,0,1,0);
+        writeRGB(adjustInt(BLUE,0.005));
         delay(2);
-        fullColor(1,0,1,0);
+        writeRGB(adjustInt(MAGENTA,0.005));
         delay(2);
         break;
 
@@ -120,9 +113,83 @@ void print2digits(int number) {
   Serial.print(number);
 }
 
-void fullColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
+bool doModeOnce(){
+    if(doModeOnceFlag){
+        doModeOnceFlag = false;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void writeRGB(uint8_t r, uint8_t g, uint8_t b) {
     for (uint16_t i = 0; i < pixels.numPixels(); i++) {
-        pixels.setPixelColor(i, pixels.Color(r, g, b, w));
+        pixels.setPixelColor(i, pixels.Color(r, g, b));
     }
     pixels.show();
+}
+
+Color adjustInt(Color c, float newInt){
+    return Color(c.hue,c.sat,newInt);
+}
+
+void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
+    // From: http://blog.saikoled.com/post/43693602826/why-every-led-light-should-be-using-hsi
+    int r, g, b; float Hue;
+    Hue = fmod(h,360); // cycle H around to 0-360 degrees
+    Hue = M_PI*Hue/(float)180; // Convert to radians.
+    Sat = Sat>0?(Sat<1?Sat:1):0; // clamp S and I to interval [0,1]
+    Inten = Inten>0?(Inten<2?Inten:2):0;
+
+    // Math! Thanks in part to Kyle Miller.
+    if(Hue < M_2PI3) { // First third
+        r = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
+        g = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
+        b = 255*Inten/3*(1-Sat);
+    } else if(Hue < M_4PI3) { // Second third
+        Hue = Hue - M_2PI3;
+        r = 255*Inten/3*(1-Sat);
+        g = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
+        b = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
+    } else { // Third section
+        Hue = Hue - M_4PI3;
+        r = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
+        g = 255*Inten/3*(1-Sat);
+        b = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
+    }
+    rgb[0]=r>0?(r<255?r:255):0;//r;
+    rgb[1]=g>0?(g<255?g:255):0;//g;
+    rgb[2]=b>0?(b<255?b:255):0;//b;
+}
+
+void writeHSI(int h, float s, float i) {
+    int rgbTemp[3];
+    hsi2rgb(h,s,i,rgbTemp);
+    writeRGB(rgbTemp);
+}
+
+void writeRGB(int rgb[]){
+    writeRGB(rgb[0],rgb[1],rgb[2]);
+}
+
+void writeRGB(Color c){
+    PREV = c; // Save the new color to the 'previous' value
+    writeRGB(c.red, c.green, c.blue);
+}
+
+void blinkRGB(Color c){
+    blinkRGB(c,25);
+}
+
+void blinkRGB(Color c, int d){
+    writeRGB(c);
+    delay(d);
+    writeRGB(OFF);
+    delay(d);
+}
+
+void blinkRGBnTimes(Color c, int count){
+    for(int i=0;i<count;i++){
+        blinkRGB(c);
+    }
 }
