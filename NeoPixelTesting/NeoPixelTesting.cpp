@@ -35,35 +35,35 @@ void loop() {
         curMode++;
         Serial.print("curMode = "); Serial.println(curMode);
 
-        blinkRGBnTimes(adjustInt(WHITE,0.005),2);
+        blinkRGBWnTimes(adjustInt(WHITE,0.005),2);
     }
 
     // Switch through different modes
     switch(curMode){
     case 0:
-        writeRGB(adjustInt(RED,0.005));
+        writeRGBW(adjustInt(RED,0.005));
         break;
     case 1:
-        writeRGB(adjustInt(GREEN,0.005));
+        writeRGBW(adjustInt(GREEN,0.005));
         break;
     case 2:
-        writeRGB(adjustInt(BLUE,0.005));
+        writeRGBW(adjustInt(BLUE,0.005));
         break;
     case 3:
-        writeRGB(adjustInt(WHITE,0.005));
+        writeRGBW(adjustInt(WHITE,0.005));
         break;
     case 4:
-        writeRGB(adjustInt(RED,0.005));
+        writeRGBW(adjustInt(RED,0.005));
         delay(2);
-        writeRGB(adjustInt(YELLOW,0.005));
+        writeRGBW(adjustInt(YELLOW,0.005));
         delay(2);
-        writeRGB(adjustInt(GREEN,0.005));
+        writeRGBW(adjustInt(GREEN,0.005));
         delay(2);
-        writeRGB(adjustInt(CYAN,0.005));
+        writeRGBW(adjustInt(CYAN,0.005));
         delay(2);
-        writeRGB(adjustInt(BLUE,0.005));
+        writeRGBW(adjustInt(BLUE,0.005));
         delay(2);
-        writeRGB(adjustInt(MAGENTA,0.005));
+        writeRGBW(adjustInt(MAGENTA,0.005));
         delay(2);
         break;
 
@@ -122,9 +122,9 @@ bool doModeOnce(){
     }
 }
 
-void writeRGB(uint8_t r, uint8_t g, uint8_t b) {
+void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
     for (uint16_t i = 0; i < pixels.numPixels(); i++) {
-        pixels.setPixelColor(i, pixels.Color(r, g, b));
+        pixels.setPixelColor(i, pixels.Color(r, g, b, w));
     }
     pixels.show();
 }
@@ -133,63 +133,66 @@ Color adjustInt(Color c, float newInt){
     return Color(c.hue,c.sat,newInt);
 }
 
-void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
-    // From: http://blog.saikoled.com/post/43693602826/why-every-led-light-should-be-using-hsi
-    int r, g, b; float Hue;
+void hsi2rgbw(int h, float Sat, float Inten, int* rgbw) {
+    // From: http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
+    int r, g, b, w; float Hue;
     Hue = fmod(h,360); // cycle H around to 0-360 degrees
     Hue = M_PI*Hue/(float)180; // Convert to radians.
     Sat = Sat>0?(Sat<1?Sat:1):0; // clamp S and I to interval [0,1]
     Inten = Inten>0?(Inten<2?Inten:2):0;
 
-    // Math! Thanks in part to Kyle Miller.
     if(Hue < M_2PI3) { // First third
-        r = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
-        g = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
-        b = 255*Inten/3*(1-Sat);
+        r = Sat*255*Inten/3*(1+   cos(Hue)/cos(M_1PI3-Hue));
+        g = Sat*255*Inten/3*(1+(1-cos(Hue)/cos(M_1PI3-Hue)));
+        b = 0;
+        w = 255*(1-Sat)*Inten;
     } else if(Hue < M_4PI3) { // Second third
         Hue = Hue - M_2PI3;
-        r = 255*Inten/3*(1-Sat);
-        g = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
-        b = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
+        r = 0;
+        g = Sat*255*Inten/3*(1+   cos(Hue)/cos(M_1PI3-Hue));
+        b = Sat*255*Inten/3*(1+(1-cos(Hue)/cos(M_1PI3-Hue)));
+        w = 255*(1-Sat)*Inten;
     } else { // Third section
         Hue = Hue - M_4PI3;
-        r = 255*Inten/3*(1+Sat*(1-cos(Hue)/cos(M_1PI3-Hue)));
-        g = 255*Inten/3*(1-Sat);
-        b = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
+        r = Sat*255*Inten/3*(1+(1-cos(Hue)/cos(M_1PI3-Hue)));
+        g = 0;
+        b = Sat*255*Inten/3*(1+   cos(Hue)/cos(M_1PI3-Hue));
+        w = 255*(1-Sat)*Inten;
     }
-    rgb[0]=r>0?(r<255?r:255):0;//r;
-    rgb[1]=g>0?(g<255?g:255):0;//g;
-    rgb[2]=b>0?(b<255?b:255):0;//b;
+    rgbw[0]=r>0?(r<255?r:255):0;//r;
+    rgbw[1]=g>0?(g<255?g:255):0;//g;
+    rgbw[2]=b>0?(b<255?b:255):0;//b;
+    rgbw[3]=w>0?(w<255?w:255):0;//b;
 }
 
 void writeHSI(int h, float s, float i) {
-    int rgbTemp[3];
-    hsi2rgb(h,s,i,rgbTemp);
-    writeRGB(rgbTemp);
+    int rgbwTemp[3];
+    hsi2rgbw(h,s,i,rgbwTemp);
+    writeRGBW(rgbwTemp);
 }
 
-void writeRGB(int rgb[]){
-    writeRGB(rgb[0],rgb[1],rgb[2]);
+void writeRGBW(int rgbw[]){
+    writeRGBW(rgbw[0],rgbw[1],rgbw[2],rgbw[3]);
 }
 
-void writeRGB(Color c){
+void writeRGBW(Color c){
     PREV = c; // Save the new color to the 'previous' value
-    writeRGB(c.red, c.green, c.blue);
+    writeRGBW(c.red, c.green, c.blue, c.white);
 }
 
-void blinkRGB(Color c){
-    blinkRGB(c,25);
+void blinkRGBW(Color c){
+    blinkRGBW(c,25);
 }
 
-void blinkRGB(Color c, int d){
-    writeRGB(c);
+void blinkRGBW(Color c, int d){
+    writeRGBW(c);
     delay(d);
-    writeRGB(OFF);
+    writeRGBW(OFF);
     delay(d);
 }
 
-void blinkRGBnTimes(Color c, int count){
+void blinkRGBWnTimes(Color c, int count){
     for(int i=0;i<count;i++){
-        blinkRGB(c);
+        blinkRGBW(c);
     }
 }

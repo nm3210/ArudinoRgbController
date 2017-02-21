@@ -32,25 +32,26 @@ long alarmCheckTime = 0;
 uint16_t count = 0;
 
 // Initialize the main hsi2rgb/w functions
-void hsi2rgb(int H, float S, float I, int* rgb);
+void hsi2rgbw(int H, float S, float I, int* rgbw);
 
 // Create the color structure
 struct Color {
 public:
-    float sat, intensity;       // ranges from [0.0 to 1.0]
-    uint16_t hue;               // ranges from [0 to 360]
-    uint8_t red, green, blue;   // ranges from [0 to 255]
+    float sat, intensity;            // ranges from [0.0 to 1.0]
+    uint16_t hue;                    // ranges from [0 to 360]
+    uint8_t red, green, blue, white; // ranges from [0 to 255]
 
     Color(int h, float s, float i){
-    	int rgbTemp[3];
-    	hue = h; sat = s; intensity = i;
-    	// Convert HSI to RGB
-    	hsi2rgb(hue, sat, intensity, rgbTemp);
-    	red = rgbTemp[0];
-    	green = rgbTemp[1];
-    	blue = rgbTemp[2];
-    	// Store hash
-    	hash = (hue+1)*(red+1)*(green+1)*(blue+1);
+        int rgbwTemp[4];
+        hue = h; sat = s; intensity = i;
+        // Convert HSI to RGBW
+        hsi2rgbw(hue, sat, intensity, rgbwTemp);
+        red   = rgbwTemp[0];
+        green = rgbwTemp[1];
+        blue  = rgbwTemp[2];
+        white = rgbwTemp[3];
+        // Store hash
+        hash = (hue+1)*(red+1)*(green+1)*(blue+1)*(white+1);
     }
 
     bool operator == (const Color &other) { return(this->hash == other.getHash()); }
@@ -87,14 +88,14 @@ Color PREV (0,0,0); // create the 'previous' color variable
 void digitalClockDisplay();
 void print2digits(int digits);
 bool doModeOnce();
-void writeRGB(uint8_t r, uint8_t g, uint8_t b);
+void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w);
 Color adjustInt(Color c, float newInt);
 void writeHSI(int h, float s, float i);
-void writeRGB(int rgb[]);
-void writeRGB(Color c);
-void blinkRGB(Color c);
-void blinkRGB(Color c, int d);
-void blinkRGBnTimes(Color c, int count);
+void writeRGBW(int rgbw[]);
+void writeRGBW(Color c);
+void blinkRGBW(Color c);
+void blinkRGBW(Color c, int d);
+void blinkRGBWnTimes(Color c, int count);
 
 //Do not add code below this line
 #endif /* _NeoPixelTesting_H_ */
