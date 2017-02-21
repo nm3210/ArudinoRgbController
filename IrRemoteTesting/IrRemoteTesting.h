@@ -143,6 +143,7 @@ uint8_t brightnessLevels[numBrightLevels] = {
 
 // Constant variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;
+const uint16_t LONGPRESS_WAIT = 1250;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
@@ -168,6 +169,8 @@ int curHueVal = 0;
 long displayClockTime = 0;
 long alarmCheckTime = 0;
 uint16_t count = 0;
+long longPressTime = 0;
+bool longPressCheck = false;
 
 // Initialize the main hsi2rgb/w functions
 void hsi2rgbw(int H, float S, float I, uint8_t* rgbw);
@@ -225,10 +228,11 @@ uint8_t MANUAL[4] = {0,0,0,0};
 
 // Function declarations
 bool handleInterrupt();
-bool checkBrightnessChange();
-bool checkModesSpecial();
-bool checkModes();
-bool checkRepeatBtn(uint32_t tempButtonPress);
+bool checkRepeatBtn(uint32_t buttonPressed);
+void doLongPressAction(uint32_t buttonPressed);
+bool checkButtonBrightness(uint32_t buttonPressed);
+bool checkButtonSpecial(uint32_t buttonPressed);
+bool checkButtonMode(uint32_t buttonPressed);
 void checkForManualColor();
 void changeMode(LightColor newMode);
 long decodeIrSignal();

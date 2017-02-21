@@ -106,32 +106,106 @@ void loop() {
 
 bool handleInterrupt(){
     bool changedModes = false;
-
     unsigned long tempButtonPress = decodeIrSignal();
+
+	// Check for repeat button
     if(!checkRepeatBtn(tempButtonPress)){
         lastButtonPressed = tempButtonPress;
     }
 
+    // Handle long press detection (using repeat button press)
+    if(tempButtonPress == BTN_REPEAT){
+        if(longPressCheck==false){
+        	longPressTime = millis();
+        	longPressCheck = true;
+        }
+
+        if(longPressCheck && abs(millis() - longPressTime) > LONGPRESS_WAIT){
+        	longPressCheck = false;
+        	doLongPressAction(lastButtonSave);
+        }
+    } else if(tempButtonPress !=0) {
+    	longPressCheck = false;
+    }
+
     // Check for valid button press (meets one of our cases)
     if(lastButtonPressed!=0){
-        checkBrightnessChange();
-        changedModes |= checkModesSpecial();
-        changedModes |= checkModes();
+        checkButtonBrightness(lastButtonPressed);
+        changedModes |= checkButtonSpecial(lastButtonPressed);
+        changedModes |= checkButtonMode(lastButtonPressed);
 
         lastButtonSave = lastButtonPressed;
     }
 
     if(changedModes && curMode!=prevMode && curMode!=MODE_OFF){
-        Serial.print("curMode = "); Serial.println(curMode);
-        doModeOnceFlag = true;
-        count = 0;
+        Serial.print("curMode = ");
+        Serial.println(curMode);
     }
 
     return changedModes;
 }
 
-bool checkBrightnessChange(){
-    switch(lastButtonPressed){
+void doLongPressAction(uint32_t buttonPressed){
+	Serial.print("<!--- Long press detected!! ---!> ");
+	Serial.println(buttonPressed, HEX);
+
+	switch(buttonPressed){
+	case CTRL3BTN_ROW01_3:
+		break;
+	case CTRL3BTN_ONOFF:
+        if(curMode!=MODE_OFF){
+            changeMode(prevMode);
+        } else {
+            changeMode(MODE_OFF);
+        }
+		break;
+
+    case CTRL2BTN_RED: // case CTRL2BTN2_RED:
+    case CTRL3BTN_RED:
+    case CTRL2BTN_GREEN: // case CTRL2BTN2_GREEN:
+    case CTRL3BTN_GREEN:
+    case CTRL2BTN_BLUE: // case CTRL2BTN2_BLUE:
+    case CTRL3BTN_BLUE:
+    case CTRL2BTN_WHITE: // case CTRL2BTN2_WHITE:
+    case CTRL3BTN_WHITE:
+    case CTRL2BTN_ROW3_1: // case CTRL2BTN2_ROW2_1:
+    case CTRL3BTN_ROW03_1:
+    case CTRL2BTN_ROW3_2: // case CTRL2BTN2_ROW2_2:
+    case CTRL3BTN_ROW03_2:
+    case CTRL2BTN_ROW3_3: // case CTRL2BTN2_ROW2_3:
+    case CTRL3BTN_ROW03_3:
+    case CTRL2BTN_ROW4_1: // case CTRL2BTN2_ROW3_1:
+    case CTRL3BTN_ROW04_1:
+    case CTRL2BTN_ROW4_2: // case CTRL2BTN2_ROW3_2:
+    case CTRL3BTN_ROW04_2:
+    case CTRL2BTN_ROW4_3: // case CTRL2BTN2_ROW3_3:
+    case CTRL3BTN_ROW04_3:
+    case CTRL2BTN_ROW5_1: // case CTRL2BTN2_ROW4_1:
+    case CTRL3BTN_ROW05_1:
+    case CTRL2BTN_ROW5_2: // case CTRL2BTN2_ROW4_2:
+    case CTRL3BTN_ROW05_2:
+    case CTRL2BTN_ROW5_3: // case CTRL2BTN2_ROW4_3:
+    case CTRL3BTN_ROW05_3:
+    case CTRL2BTN_ROW6_1: // case CTRL2BTN2_ROW5_1:
+    case CTRL3BTN_ROW06_1:
+    case CTRL2BTN_ROW6_2: // case CTRL2BTN2_ROW5_2:
+    case CTRL3BTN_ROW06_2:
+    case CTRL2BTN_ROW6_3: // case CTRL2BTN2_ROW5_3:
+    case CTRL3BTN_ROW06_3:
+    case CTRL3BTN_ROW03_4:
+    case CTRL3BTN_ROW04_4:
+    case CTRL3BTN_ROW05_4:
+    case CTRL3BTN_ROW06_4:
+        // Apply color
+    	checkButtonMode(buttonPressed);
+        break;
+	default:
+		break;
+	}
+}
+
+bool checkButtonBrightness(uint32_t buttonPressed){
+    switch(buttonPressed){
 //    case CTRL1BTN_UP: case CTRL1BTN2_UP:
     case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
     case CTRL3BTN_BRIGHTUP:
@@ -151,8 +225,9 @@ bool checkBrightnessChange(){
     }
     return true;
 }
-bool checkModesSpecial(){
-    switch(lastButtonPressed){
+
+bool checkButtonSpecial(uint32_t buttonPressed){
+    switch(buttonPressed){
     // Turn things OFF
     case CTRL2BTN_OFF: // case CTRL2BTN2_OFF:
         if(curMode!=MODE_OFF){
@@ -257,8 +332,8 @@ bool checkModesSpecial(){
     }
     return true;
 }
-bool checkModes(){
-    switch(lastButtonPressed){
+bool checkButtonMode(uint32_t buttonPressed){
+    switch(buttonPressed){
     case CTRL2BTN_RED: // case CTRL2BTN2_RED:
     case CTRL3BTN_RED:
 //        Serial.println("Mode: SOLID_RED");
