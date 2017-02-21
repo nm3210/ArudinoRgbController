@@ -1,8 +1,8 @@
 // Do not remove the include below
 #include "IrRemoteTesting.h"
 
-int IrPin = 11;
-IRrecv irrecv(IrPin);
+#define IR_PIN   2
+IRrecv irrecv(IR_PIN);
 decode_results results;
 
 // Define buttons
@@ -29,49 +29,94 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Starting Arduino...");
     irrecv.enableIRIn(); // start receiving data
+
+    attachInterrupt(digitalPinToInterrupt(IR_PIN), interruptIr, LOW);
 }
 
 void loop() {
-    if (irrecv.decode(&results)) {
-        if (results.value != 0xFFFFFFFF) {
-            Serial.println(results.value, HEX); //print the value
-        }
+    // TODO: figure out how to continue the writeRGBW when the interrupt has been triggered
 
+    // Detect IR and change mode
+    if(decodeIrSignal() && changeMode){
+        changeMode = false;
+        count = 0;
+        Serial.print("curMode = "); Serial.println(curMode);
+
+        // Reattach interrupt
+        attachInterrupt(digitalPinToInterrupt(IR_PIN), interruptIr, LOW);
+    }
+
+    switch(curMode){
+        case 0:
+        default:
+        	break;
+    }
+
+    // Print out current time (once every second)
+    if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
+        displayClockTime = millis();
+        digitalClockDisplay();
+    }
+    delay(0);
+}
+void interruptIr(){
+    changeMode = true;
+    detachInterrupt(0);
+}
+
+bool decodeIrSignal(){
+    bool gotResults = false;
+    if (irrecv.decode(&results)) {
+        gotResults = true;
         switch(results.value){
+        case 0xFFFFFFFF:
+        default:
+            gotResults = false;
+            break;
+
         case BTN_1:
             Serial.println("Button 1");
+            curMode = 0;
             break;
 
         case BTN_2:
             Serial.println("Button 2");
+            curMode = 1;
             break;
 
         case BTN_3:
             Serial.println("Button 3");
+            curMode = 2;
             break;
 
         case BTN_4:
             Serial.println("Button 4");
+            curMode = 3;
             break;
 
         case BTN_5:
             Serial.println("Button 5");
+            curMode = 4;
             break;
 
         case BTN_6:
             Serial.println("Button 6");
+            curMode = 5;
             break;
 
         case BTN_7:
             Serial.println("Button 7");
+            curMode = 6;
             break;
 
         case BTN_8:
             Serial.println("Button 8");
+            curMode = 7;
             break;
 
         case BTN_9:
             Serial.println("Button 9");
+            curMode = 8;
             break;
 
         case BTN_0:
@@ -94,10 +139,6 @@ void loop() {
             Serial.println("Button UP");
             break;
 
-        case BTN_RIGHT:
-            Serial.println("Button RIGHT");
-            break;
-
         case BTN_DOWN:
             Serial.println("Button DOWN");
             break;
@@ -106,12 +147,36 @@ void loop() {
             Serial.println("Button LEFT");
             break;
 
-        case 0xFFFFFFFF:
-        default:
+        case BTN_RIGHT:
+            Serial.println("Button RIGHT");
             break;
         }
 
-        // Restart the receiver
+        // Restart the ir receiver
         irrecv.resume();
     }
+    return gotResults;
+}
+
+void digitalClockDisplay(){
+    // digital clock display of the time
+    Serial.print(year());
+    Serial.print("-");
+    print2digits(month());
+    Serial.print("-");
+    print2digits(day());
+    Serial.print(" ");
+    print2digits(hour());
+    Serial.print(":");
+    print2digits(minute());
+    Serial.print(":");
+    print2digits(second());
+    Serial.println();
+}
+
+void print2digits(int number) {
+    if (number >= 0 && number < 10) {
+        Serial.write('0');
+  }
+  Serial.print(number);
 }
