@@ -7,10 +7,14 @@
 
 // Variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 250;
+const uint16_t LONGPRESS_WAIT = 1250;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
 long displayClockTime = 0;
+long longPressTime = 0;
+bool longPressCheck = false;
+bool doAllSegmentsMode = false;
 uint32_t lastButtonPressed = 0;
 uint32_t lastButtonSave = 0;
 
@@ -88,21 +92,27 @@ static const Color PURPLE = VIOLET;
 // Functions
 bool irInterrupt();
 long decodeIrSignal();
-bool checkRepeatBtn(uint32_t tempButtonPress);
-bool checkButtonBrightness();
-bool checkButtonSpecial();
-bool checkButtonMode();
+bool checkRepeatBtn(uint32_t buttonPressed);
+void doLongPressAction(uint32_t buttonPressed);
+bool checkButtonBrightness(uint32_t buttonPressed);
+bool checkButtonSpecial(uint32_t buttonPressed);
+bool checkButtonMode(uint32_t buttonPressed);
+bool checkButtonMode(uint32_t buttonPressed, bool doAllSegments);
 void changeMode(LightMode newMode, uint8_t seg);
 void changeMode(LightMode newMode);
+void changeMode(LightMode newMode, bool doAllSegments);
 void changeModeAllSegments(LightMode newMode);
 void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint16_t start, uint16_t stop);
 void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w);
 void writeRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t seg);
 void writeRGBW(uint8_t rgbw[]);
 void writeRGBW(Color c);
+void writeRGBW(Color c, uint8_t seg);
 void writeHSI(int h, float s, float i);
+void writeHSI(int h, float s, float i, uint8_t seg);
 Color adjustSat(Color c, float newSat);
 Color adjustInt(Color c, float newInt);
+void waitForButton(unsigned long i);
 
 
 #define BTN_REPEAT           0xFFFFFFFF
