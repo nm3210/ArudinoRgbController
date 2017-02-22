@@ -114,6 +114,29 @@ void loop() {
 		}
 	}
 
+	if(blinkCurSegment){
+		waitForButton(BLINKTIME);
+		Color c = Color(0,0,0);
+		if(curMode[curSeg]!=SOLID_WHITE || adjustBrightnessVal[curSeg]!=1){
+			c = WHITE;
+		}
+		c = adjustInt(c,c.intensity * ((float) brightnessLevels[1])/255.0);
+		if(doAllSegmentsMode){
+			for(uint8_t i = 0; i < numSegments; i++){
+				writeRGBW(c.red, c.green, c.blue, c.white, i);
+			}
+		} else {
+		    writeRGBW(c.red, c.green, c.blue, c.white, curSeg);
+		}
+		waitForButton(BLINKTIME);
+
+		blinkCount++;
+		if(blinkCount>=NUMBLINKS){
+			blinkCurSegment = false;
+			blinkCount = 0;
+		}
+	}
+
     if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
         displayClockTime = millis();
     }
@@ -204,6 +227,10 @@ void doLongPressAction(uint32_t buttonPressed){
 	switch(buttonPressed){
 	case CTRL3BTN_ROW01_3:
 		doAllSegmentsMode = !doAllSegmentsMode;
+		if(doAllSegmentsMode){
+			blinkCurSegment = true;
+		}
+		blinkCount = 0;
 		break;
 	case CTRL3BTN_ONOFF:
         if(curMode[curSeg]!=MODE_OFF){
@@ -329,7 +356,11 @@ bool checkButtonSpecial(uint32_t buttonPressed){
 
 	// Change segment
 	case CTRL3BTN_ROW01_3:
-		curSeg = (curSeg + 1) % numSegments;
+		if(blinkCurSegment){
+			curSeg = (curSeg + 1) % numSegments;
+		}
+		blinkCurSegment = true;
+		blinkCount = 0;
 		break;
 
     case CTRL2BTN_FLASH:  // case CTRL2BTN2_FLASH:

@@ -8,6 +8,8 @@
 // Variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 250;
 const uint16_t LONGPRESS_WAIT = 1250;
+const uint8_t  NUMBLINKS = 5;
+const uint16_t BLINKTIME = 150;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
@@ -17,6 +19,9 @@ bool longPressCheck = false;
 bool doAllSegmentsMode = false;
 uint32_t lastButtonPressed = 0;
 uint32_t lastButtonSave = 0;
+bool blinkCurSegment = true;
+uint8_t  blinkCount = 0;
+
 
 // LightMode enum
 enum LightMode{
