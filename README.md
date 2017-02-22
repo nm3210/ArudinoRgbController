@@ -6,7 +6,7 @@ This repository contains a bunch of projects that I've created over the years fo
 
     The idea was to be a 'Visual Alarm', inasmuch that the LEDs would change color based on the time during the day. For this project, I also designed a circuit board with all the necessary RTC inputs and power for the LEDs which can be found on OSH Park [here](https://oshpark.com/shared_projects/ZrMcpgAp) (images of the circuit board below). 
     
-    [![Visual Alarm Rev3](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/bottom_image/ZrMcpgAp/thumb_i.png)](https://oshpark.com/shared_projects/ZrMcpgAp) [![Visual Alarm Rev3](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/top_image/ZrMcpgAp/thumb_i.png)](https://oshpark.com/shared_projects/ZrMcpgAp)
+    [![Visual Alarm Rev3](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/bottom_image/ZrMcpgAp/thumb_i.png)](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/bottom_image/ZrMcpgAp/i.png) [![Visual Alarm Rev3](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/top_image/ZrMcpgAp/thumb_i.png)](https://644db4de3505c40a0444-327723bce298e3ff5813fb42baeefbaa.ssl.cf1.rackcdn.com/uploads/project/top_image/ZrMcpgAp/i.png)
     
     
 * [RgbControllerWithIR](RgbControllerWithIR): This is an extension of the above ArudinoRgbController project that adds in the [IRremote library](https://github.com/z3t0/Arduino-IRremote) in order to control the colors a little easier.
