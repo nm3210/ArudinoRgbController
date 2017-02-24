@@ -17,11 +17,16 @@ This repository contains a bunch of projects that I've created over the years fo
 
 
 ## Testing & Prototyping Projects:
-* [MultiSegmentTesting](MultiSegmentTesting)
-* [IrRemoteTesting](IrRemoteTesting)
-* [NeoPixelTesting](NeoPixelTesting)
-* [RTC_AlarmTesting](RTC_AlarmTesting)
-* [RTC_ReadTime](RTC_ReadTime)
-* [RTC_SetTime](RTC_SetTime)
-* [ButtonTesting](ButtonTesting)
-* [HsiColor](HsiColor)
+### NeoPixel (WS2812B/SK6812, specifically RGBW strips)
+* [NeoPixelTesting](NeoPixelTesting): This project plays around with the NeoPixel RGBW LED strips. I initially bought the [AdaFruit](https://www.adafruit.com/products/2868) stick of eight but eventually bought a roll of them off ebay (5m of 30LEDs/m).
+* [MultiSegmentTesting](MultiSegmentTesting): This is an extension of the NeoPixelTesting project that adds in the ability to split up the strip into differnt arbitrary-length segments.
+
+### RTC (DS1307)
+* [RTC_SetTime](RTC_SetTime): Set/initialize the time of the DS1307 to the time at compile.
+* [RTC_ReadTime](RTC_ReadTime): Read back the time on the DS1307 with the ability to add in extra seconds with a button press.
+* [RTC_AlarmTesting](RTC_AlarmTesting): Test the [TimeAlarm](https://github.com/PaulStoffregen/TimeAlarms) library with the DS1307.
+
+### Other/Misc
+* [IrRemoteTesting](IrRemoteTesting): Test the incorporation of an IR receiver on an arduino.
+* [ButtonTesting](ButtonTesting): Test the use of the AIN0 comparator on the atmega328 for use as a button.
+* [HsiColor](HsiColor): Uses the 'HSI' colorspace instead of RGB, making it easier to do crossfading, etc.
