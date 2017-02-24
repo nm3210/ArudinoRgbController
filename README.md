@@ -29,4 +29,4 @@ This repository contains a bunch of projects that I've created over the years fo
 ### Other/Misc
 * [IrRemoteTesting](IrRemoteTesting): Test the incorporation of an IR receiver on an arduino.
 * [ButtonTesting](ButtonTesting): Test the use of the AIN0 comparator on the atmega328 for use as a button.
-* [HsiColor](HsiColor): Uses the 'HSI' colorspace instead of RGB, making it easier to do crossfading, etc.
+* [HsiColor](HsiColor): Establishes the 'HSI' colorspace (from [here](http://blog.saikoled.com/post/43693602826/why-every-led-light-should-be-using-hsi)) instead of direct RGB, making it easier to do crossfading (used in the ArduinoRgbController project).
