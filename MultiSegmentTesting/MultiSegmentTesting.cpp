@@ -329,28 +329,56 @@ bool checkButtonSpecial(uint32_t buttonPressed){
     switch(buttonPressed){
     // Turn things OFF
     case CTRL2BTN_OFF: // case CTRL2BTN2_OFF:
-        if(curMode[curSeg]!=MODE_OFF){
-            changeMode(MODE_OFF);
+        if(doAllSegmentsMode){
+            if(curMode[curSeg]!=MODE_OFF){
+                changeMode(MODE_OFF,true);
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            if(curMode[curSeg]!=MODE_OFF){
+                changeMode(MODE_OFF);
+            } else {
+                return false;
+            }
         }
         break;
 
     // Turn things ON
     case CTRL2BTN_ON: // case CTRL2BTN2_ON:
-        if(curMode[curSeg]==MODE_OFF){
-            changeMode(prevMode[curSeg]);
+        if(doAllSegmentsMode){
+            if(curMode[curSeg]==MODE_OFF){
+                for(uint8_t i=0; i < numSegments; i++){
+                    changeMode(prevMode[i]);
+                }
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            if(curMode[curSeg]==MODE_OFF){
+                changeMode(prevMode[curSeg]);
+            } else {
+                return false;
+            }
         }
         break;
 
     // Toggle ON/OFF state
     case CTRL3BTN_ONOFF:
-        if(curMode[curSeg]==MODE_OFF){
-            changeMode(prevMode[curSeg]);
+        if(doAllSegmentsMode){
+            if(curMode[curSeg]==MODE_OFF){
+                for(uint8_t i=0; i < numSegments; i++){
+                    changeMode(prevMode[i],i);
+                }
+            } else {
+                changeMode(MODE_OFF,true);
+            }
         } else {
-            changeMode(MODE_OFF);
+            if(curMode[curSeg]==MODE_OFF){
+                changeMode(prevMode[curSeg]);
+            } else {
+                changeMode(MODE_OFF);
+            }
         }
         break;
 
