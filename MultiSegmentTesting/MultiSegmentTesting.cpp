@@ -10,10 +10,7 @@ const uint16_t numLeds = 150;
 const uint8_t  numSegments = 5;
 const uint16_t segments[numSegments+1] = {0, 30, 60, 90, 120, 150};
 
-uint8_t adjustBrightnessVal[numSegments];
-uint8_t adjustSaturationVal[numSegments];
-LightMode prevMode[numSegments];
-LightMode curMode [numSegments];
+SegmentData segmentData[numSegments];
 uint8_t   curSeg = 0;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(numLeds, LED_PIN, NEO_GRBW + NEO_KHZ800);
@@ -33,12 +30,9 @@ void setup() {
     // Enable IR pin & start receiving data
     irrecv.enableIRIn();
 
-    // Initialize arrays
+    // Initialize segment data
     for(uint8_t i=0; i < numSegments; i++){
-    	adjustBrightnessVal[i] = 1;
-    	adjustSaturationVal[i] = numBrightLevels-1;
-    	prevMode[i] = MODE_OFF;
-    	curMode[i] = MODE_OFF;
+        segmentData[i].initialize();
     }
 }
 
@@ -47,7 +41,7 @@ void loop() {
 
 	// Switch through different modes
 	for(uint8_t i = 0; i < numSegments; i++){
-		switch(curMode[i]){
+		switch(segmentData[i].curMode){
 		case MODE_OFF:
 			writeRGBW(OFF,i); break;
 
@@ -117,7 +111,7 @@ void loop() {
 	if(blinkCurSegment){
 		waitForButton(BLINKTIME);
 		Color c = Color(0,0,0);
-		if(curMode[curSeg]!=SOLID_WHITE || adjustBrightnessVal[curSeg]!=1){
+		if(segmentData[curSeg].curMode!=SOLID_WHITE || segmentData[curSeg].brightness!=1){
 			c = WHITE;
 		}
 		c = adjustInt(c,c.intensity * ((float) brightnessLevels[1])/255.0);
@@ -177,9 +171,9 @@ bool irInterrupt(){
         lastButtonSave = lastButtonPressed;
     }
 
-    if(changedModes && curMode[curSeg]!=prevMode[curSeg] && curMode[curSeg]!=MODE_OFF){
+    if(changedModes && segmentData[curSeg].curMode!=segmentData[curSeg].prevMode && segmentData[curSeg].curMode!=MODE_OFF){
         Serial.print("curMode = ");
-        Serial.println(curMode[curSeg]);
+        Serial.println(segmentData[curSeg].curMode);
     }
 
 	return changedModes;
@@ -233,9 +227,9 @@ void doLongPressAction(uint32_t buttonPressed){
 		blinkCount = 0;
 		break;
 	case CTRL3BTN_ONOFF:
-        if(curMode[curSeg]!=MODE_OFF){
+        if(segmentData[curSeg].curMode!=MODE_OFF){
             for(uint8_t i=0; i < numSegments; i++){
-            	changeMode(prevMode[i],i);
+            	changeMode(segmentData[i].prevMode,i);
             }
         } else {
             changeMode(MODE_OFF,true);
@@ -281,7 +275,7 @@ void doLongPressAction(uint32_t buttonPressed){
     	// Copy over brightness to all the other segments
         for(uint8_t i=0; i < numSegments; i++){
         	if(i==curSeg) continue;
-        	adjustBrightnessVal[i] = adjustBrightnessVal[curSeg];
+        	segmentData[i].brightness = segmentData[curSeg].brightness;
         }
         // Apply color to all segments
     	checkButtonMode(buttonPressed,true);
@@ -300,10 +294,10 @@ bool checkButtonBrightness(uint32_t buttonPressed){
         //do bright increase
     	if(doAllSegmentsMode){
     		for(uint8_t i = 0; i < numSegments; i++){
-    			adjustBrightnessVal[i] = constrain(adjustBrightnessVal[i] + 1,1,numBrightLevels-1);
+    		    segmentData[i].brightness = constrain(segmentData[i].brightness + 1,1,numBrightLevels-1);
     		}
     	} else {
-    		adjustBrightnessVal[curSeg] = constrain(adjustBrightnessVal[curSeg] + 1,1,numBrightLevels-1);
+    	    segmentData[curSeg].brightness = constrain(segmentData[curSeg].brightness + 1,1,numBrightLevels-1);
     	}
         break;
 //    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
@@ -311,13 +305,13 @@ bool checkButtonBrightness(uint32_t buttonPressed){
     case CTRL3BTN_BRIGHTDOWN:
     case CTRL4BTN_VOLDOWN:
         // do bright decrease
-    	if(doAllSegmentsMode){
-    		for(uint8_t i = 0; i < numSegments; i++){
-    			adjustBrightnessVal[i] = constrain(adjustBrightnessVal[i] - 1,1,numBrightLevels-1);
-    		}
-    	} else {
-    		adjustBrightnessVal[curSeg] = constrain(adjustBrightnessVal[curSeg] - 1,1,numBrightLevels-1);
-    	}
+        if(doAllSegmentsMode){
+            for(uint8_t i = 0; i < numSegments; i++){
+                segmentData[i].brightness = constrain(segmentData[i].brightness - 1,1,numBrightLevels-1);
+            }
+        } else {
+            segmentData[curSeg].brightness = constrain(segmentData[curSeg].brightness - 1,1,numBrightLevels-1);
+        }
         break;
     default:
         return false;
@@ -330,13 +324,13 @@ bool checkButtonSpecial(uint32_t buttonPressed){
     // Turn things OFF
     case CTRL2BTN_OFF: // case CTRL2BTN2_OFF:
         if(doAllSegmentsMode){
-            if(curMode[curSeg]!=MODE_OFF){
+            if(segmentData[curSeg].curMode!=MODE_OFF){
                 changeMode(MODE_OFF,true);
             } else {
                 return false;
             }
         } else {
-            if(curMode[curSeg]!=MODE_OFF){
+            if(segmentData[curSeg].curMode!=MODE_OFF){
                 changeMode(MODE_OFF);
             } else {
                 return false;
@@ -347,16 +341,16 @@ bool checkButtonSpecial(uint32_t buttonPressed){
     // Turn things ON
     case CTRL2BTN_ON: // case CTRL2BTN2_ON:
         if(doAllSegmentsMode){
-            if(curMode[curSeg]==MODE_OFF){
+            if(segmentData[curSeg].curMode==MODE_OFF){
                 for(uint8_t i=0; i < numSegments; i++){
-                    changeMode(prevMode[i]);
+                    changeMode(segmentData[i].prevMode);
                 }
             } else {
                 return false;
             }
         } else {
-            if(curMode[curSeg]==MODE_OFF){
-                changeMode(prevMode[curSeg]);
+            if(segmentData[curSeg].curMode==MODE_OFF){
+                changeMode(segmentData[curSeg].prevMode);
             } else {
                 return false;
             }
@@ -366,16 +360,16 @@ bool checkButtonSpecial(uint32_t buttonPressed){
     // Toggle ON/OFF state
     case CTRL3BTN_ONOFF:
         if(doAllSegmentsMode){
-            if(curMode[curSeg]==MODE_OFF){
+            if(segmentData[curSeg].curMode==MODE_OFF){
                 for(uint8_t i=0; i < numSegments; i++){
-                    changeMode(prevMode[i],i);
+                    changeMode(segmentData[i].prevMode,i);
                 }
             } else {
                 changeMode(MODE_OFF,true);
             }
         } else {
-            if(curMode[curSeg]==MODE_OFF){
-                changeMode(prevMode[curSeg]);
+            if(segmentData[curSeg].curMode==MODE_OFF){
+                changeMode(segmentData[curSeg].prevMode);
             } else {
                 changeMode(MODE_OFF);
             }
@@ -474,10 +468,10 @@ bool checkButtonMode(uint32_t buttonPressed, bool doAllSegments){
 }
 
 void changeMode(LightMode newMode, uint8_t seg){
-    if(curMode[seg]!=MODE_OFF){
-        prevMode[seg] = curMode[seg];
+    if(segmentData[seg].curMode!=MODE_OFF){
+        segmentData[seg].prevMode = segmentData[seg].curMode;
     }
-    curMode[seg] = newMode;
+    segmentData[seg].curMode = newMode;
 }
 
 void changeMode(LightMode newMode){
@@ -561,8 +555,8 @@ void writeRGBW(Color c){
 	writeRGBW(c, curSeg);
 }
 void writeRGBW(Color c, uint8_t seg){
-    c = adjustInt(c,c.intensity * ((float) brightnessLevels[adjustBrightnessVal[seg]])/255.0);
-    c = adjustSat(c,c.sat * ((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal[seg]-1])/255.0);
+    c = adjustInt(c,c.intensity * ((float) brightnessLevels[segmentData[seg].brightness])/255.0);
+    c = adjustSat(c,c.sat * ((float) 256-brightnessLevels[numBrightLevels-segmentData[seg].saturation-1])/255.0);
 //    PREV = c; // Save the new color to the 'previous' value
 //    isManualOn = false;
     writeRGBW(c.red, c.green, c.blue, c.white, seg);

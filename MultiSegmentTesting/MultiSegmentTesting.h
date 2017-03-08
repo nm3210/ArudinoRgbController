@@ -8,7 +8,7 @@
 // Variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 250;
 const uint16_t LONGPRESS_WAIT = 1250;
-const uint8_t  NUMBLINKS = 5;
+const uint8_t  NUMBLINKS = 4;
 const uint16_t BLINKTIME = 150;
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
@@ -23,8 +23,16 @@ bool blinkCurSegment = true;
 uint8_t  blinkCount = 0;
 
 
+#define numBrightLevels 16
+uint8_t brightnessLevels[numBrightLevels] = {
+//    1, 2, 5, 11, 24, 52, 116, 255 // 8
+//    1, 2, 3, 6, 12, 22, 40, 75, 139, 255 // 10
+//        1, 2, 3, 4, 5, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
+        0, 1, 2, 3, 4, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
+};
+
 // LightMode enum
-enum LightMode{
+enum LightMode {
     MODE_OFF, MANUAL_COLOR,
     SOLID_RED, SOLID_GREEN, SOLID_BLUE, SOLID_WHITE, SOLID_CYAN, SOLID_YELLOW, SOLID_MAGENTA,
     SOLID_COLOR01, SOLID_COLOR02, SOLID_COLOR03, SOLID_COLOR04,
@@ -34,12 +42,19 @@ enum LightMode{
     MODE1, MODE2, MODE3, MODE4, MODE5, MODE6
 };
 
-#define numBrightLevels 16
-uint8_t brightnessLevels[numBrightLevels] = {
-//    1, 2, 5, 11, 24, 52, 116, 255 // 8
-//    1, 2, 3, 6, 12, 22, 40, 75, 139, 255 // 10
-//        1, 2, 3, 4, 5, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
-        0, 1, 2, 3, 4, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
+// Set up segment data structure
+struct SegmentData {
+    uint8_t brightness;
+    uint8_t saturation;
+    LightMode curMode;
+    LightMode prevMode;
+
+    void initialize(){
+        brightness = 1;
+        saturation = numBrightLevels-1;
+        curMode = MODE_OFF;
+        prevMode = MODE_OFF;
+    }
 };
 
 // Initialize the main hsi2rgb/w functions
