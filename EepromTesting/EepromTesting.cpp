@@ -8,17 +8,28 @@ void setup() {
     Serial.println("Starting Arduino...");
 
     int eeAddress = 0;
-    float floatVarWrite = 123.456f;
-    EEPROM.put(eeAddress, floatVarWrite);
-    Serial.println("Written float data type!");
+    SegmentData segDataWrite;
+    segDataWrite.initialize();
+    EEPROM.put(eeAddress, segDataWrite);
+    Serial.print("Wrote SegmentData type!");
 }
 
 void loop() {
     int eeAddress = 0;
-    float floatVarRead = 0.0f;
-    EEPROM.get(eeAddress, floatVarRead);
-    Serial.print("Read float data type! = ");
-    Serial.println(floatVarRead, 3);
+    SegmentData segDataRead;
+    EEPROM.get(eeAddress, segDataRead);
 
+    Serial.print("Read SegmentData [sizeof(SegmentData)==");
+    Serial.print(sizeof(SegmentData));
+    Serial.print("bytes, sizeof(segDataRead)==");
+    Serial.print(sizeof(segDataRead));
+    Serial.print("bytes] brightness=");
+    Serial.print(segDataRead.brightness);
+    Serial.print(", saturation=");
+    Serial.print(segDataRead.saturation);
+    Serial.print(", curMode=");
+    Serial.print(segDataRead.curMode);
+    Serial.print(", prevMode=");
+    Serial.println(segDataRead.prevMode);
     delay(1000);
 }
