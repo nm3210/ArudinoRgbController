@@ -2,8 +2,10 @@
 #define _MultiSegmentTesting_H_
 
 // Includes
+#include "Arduino.h"
 #include "IRremote.h"
 #include "Adafruit_NeoPixel.h"
+#include "EEPROM.h"
 
 // Variables
 const uint16_t CLOCKDISPLAY_TIMEOUT = 250;
@@ -19,7 +21,7 @@ bool longPressCheck = false;
 bool doAllSegmentsMode = false;
 uint32_t lastButtonPressed = 0;
 uint32_t lastButtonSave = 0;
-bool blinkCurSegment = true;
+bool blinkCurSegment = false;
 uint8_t  blinkCount = 0;
 
 
@@ -133,6 +135,9 @@ void writeHSI(int h, float s, float i, uint8_t seg);
 Color adjustSat(Color c, float newSat);
 Color adjustInt(Color c, float newInt);
 void waitForButton(unsigned long i);
+void writeSegDataToEeprom(int address);
+void readSegDataFromEeprom(int address);
+
 
 
 #define BTN_REPEAT           0xFFFFFFFF

@@ -6,9 +6,14 @@
 //const uint16_t numLeds = 8;
 //const uint8_t  numSegments = 4;
 //const uint16_t segments[numSegments+1] = {0, 2, 4, 6, 8};
-const uint16_t numLeds = 150;
-const uint8_t  numSegments = 5;
-const uint16_t segments[numSegments+1] = {0, 30, 60, 90, 120, 150};
+//const uint16_t numLeds = 150;
+//const uint8_t  numSegments = 5;
+//const uint16_t segments[numSegments+1] = {0, 30, 60, 90, 120, 150};
+const uint16_t numLeds = 56;
+const uint8_t  numSegments = 3;
+const uint16_t segments[numSegments+1] = {0, 18, 38, 56};
+
+const uint8_t  eeAddress = 0;
 
 SegmentData segmentData[numSegments];
 uint8_t   curSeg = 0;
@@ -34,6 +39,9 @@ void setup() {
     for(uint8_t i=0; i < numSegments; i++){
         segmentData[i].initialize();
     }
+
+    // Read data from EEPROM to get previous configuration
+    readSegDataFromEeprom(eeAddress);
 }
 
 void loop() {
@@ -299,6 +307,8 @@ bool checkButtonBrightness(uint32_t buttonPressed){
     	} else {
     	    segmentData[curSeg].brightness = constrain(segmentData[curSeg].brightness + 1,1,numBrightLevels-1);
     	}
+        // Update EEPROM with new configuration
+        writeSegDataToEeprom(eeAddress);
         break;
 //    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
     case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
@@ -312,6 +322,8 @@ bool checkButtonBrightness(uint32_t buttonPressed){
         } else {
             segmentData[curSeg].brightness = constrain(segmentData[curSeg].brightness - 1,1,numBrightLevels-1);
         }
+        // Update EEPROM with new configuration
+        writeSegDataToEeprom(eeAddress);
         break;
     default:
         return false;
@@ -472,6 +484,9 @@ void changeMode(LightMode newMode, uint8_t seg){
         segmentData[seg].prevMode = segmentData[seg].curMode;
     }
     segmentData[seg].curMode = newMode;
+
+    // Update EEPROM with new configuration
+    writeSegDataToEeprom(eeAddress);
 }
 
 void changeMode(LightMode newMode){
@@ -587,3 +602,11 @@ void waitForButton(unsigned long i){
         delay(0);
     }
 }
+
+void writeSegDataToEeprom(int address){
+    EEPROM.put(address, segmentData);
+}
+void readSegDataFromEeprom(int address){
+    EEPROM.get(address, segmentData);
+}
+
