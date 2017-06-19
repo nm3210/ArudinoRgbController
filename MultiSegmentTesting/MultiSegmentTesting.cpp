@@ -6,17 +6,23 @@
 //const uint16_t numLeds = 8;
 //const uint8_t  numSegments = 4;
 //const uint16_t segments[numSegments+1] = {0, 2, 4, 6, 8};
+//const uint16_t segments[numSegments+1] = {0, 5, 6, 7, 8};
 //const uint16_t numLeds = 150;
 //const uint8_t  numSegments = 5;
 //const uint16_t segments[numSegments+1] = {0, 30, 60, 90, 120, 150};
-const uint16_t numLeds = 56;
-const uint8_t  numSegments = 3;
-const uint16_t segments[numSegments+1] = {0, 18, 38, 56};
+//const uint16_t numLeds = 56;
+//const uint8_t  numSegments = 3;
+//const uint16_t segments[numSegments+1] = {0, 18, 38, 56};
+const uint16_t numLeds = 112;
+const uint8_t  numSegments = 6;
+const uint16_t segments[numSegments+1] = {0, 18, 38, 56, 74, 94, 112};
+
+uint16_t rainbowIndex[numSegments+1] = {0,0,0,0,0};
 
 const uint8_t  eeAddress = 0;
 
 SegmentData segmentData[numSegments];
-uint8_t   curSeg = 0;
+uint8_t curSeg = 0;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(numLeds, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
@@ -41,6 +47,7 @@ void setup() {
     }
 
     // Read data from EEPROM to get previous configuration
+//    writeSegDataToEeprom(eeAddress);
     readSegDataFromEeprom(eeAddress);
 }
 
@@ -48,72 +55,73 @@ void loop() {
 	irInterrupt();
 
 	// Switch through different modes
-	for(uint8_t i = 0; i < numSegments; i++){
-		switch(segmentData[i].curMode){
+	for(uint8_t seg = 0; seg < numSegments; seg++){
+		switch(segmentData[seg].curMode){
 		case MODE_OFF:
-			writeRGBW(OFF,i); break;
+			writeRGBW(OFF,seg); break;
 
 		case SOLID_WHITE:
-			writeRGBW(WHITE,i); break;
+			writeRGBW(WHITE,seg); break;
 		case SOLID_RED:
-			writeRGBW(RED,i); break;
+			writeRGBW(RED,seg); break;
 		case SOLID_GREEN:
-			writeRGBW(GREEN,i); break;
+			writeRGBW(GREEN,seg); break;
 		case SOLID_BLUE:
-			writeRGBW(BLUE,i); break;
+			writeRGBW(BLUE,seg); break;
 		case SOLID_CYAN:
-			writeRGBW(CYAN,i); break;
+			writeRGBW(CYAN,seg); break;
 		case SOLID_YELLOW:
-			writeRGBW(YELLOW,i); break;
+			writeRGBW(YELLOW,seg); break;
 		case SOLID_MAGENTA:
-			writeRGBW(MAGENTA,i); break;
+			writeRGBW(MAGENTA,seg); break;
 
 		case SOLID_COLOR01:
-			writeHSI( 10,1.0,1.0,i); break;
+			writeHSI( 10,1.0,1.0,seg); break;
 		case SOLID_COLOR04:
-			writeHSI( 20,1.0,1.0,i); break;
+			writeHSI( 20,1.0,1.0,seg); break;
 		case SOLID_COLOR07:
-			writeHSI( 30,1.0,1.0,i); break;
+			writeHSI( 30,1.0,1.0,seg); break;
 		case SOLID_COLOR10:
-			writeHSI( 40,1.0,1.0,i); break;
+			writeHSI( 40,1.0,1.0,seg); break;
 
 		case SOLID_COLOR02:
-			writeHSI(130,1.0,1.0,i); break;
+			writeHSI(130,1.0,1.0,seg); break;
 		case SOLID_COLOR05:
-			writeHSI(147,1.0,1.0,i); break;
+			writeHSI(147,1.0,1.0,seg); break;
 		case SOLID_COLOR08:
-			writeHSI(163,1.0,1.0,i); break;
+			writeHSI(163,1.0,1.0,seg); break;
 		case SOLID_COLOR11:
-			writeHSI(180,1.0,1.0,i); break;
+			writeHSI(180,1.0,1.0,seg); break;
 
 		case SOLID_COLOR03:
-			writeHSI(260,1.0,1.0,i); break;
+			writeHSI(260,1.0,1.0,seg); break;
 		case SOLID_COLOR06:
-			writeHSI(280,1.0,1.0,i); break;
+			writeHSI(280,1.0,1.0,seg); break;
 		case SOLID_COLOR09:
-			writeHSI(300,1.0,1.0,i); break;
+			writeHSI(300,1.0,1.0,seg); break;
 		case SOLID_COLOR12:
-			writeHSI(320,1.0,1.0,i); break;
+			writeHSI(320,1.0,1.0,seg); break;
 
 		case SOLID_COLOR13:
-			writeHSI(330,1.0,1.0,i); break;
+			writeHSI(330,1.0,1.0,seg); break;
 		case SOLID_COLOR14:
-			writeHSI(345,1.0,1.0,i); break;
+			writeHSI(345,1.0,1.0,seg); break;
 		case SOLID_COLOR15:
-			writeHSI(200,1.0,1.0,i); break;
+			writeHSI(200,1.0,1.0,seg); break;
 		case SOLID_COLOR16:
-			writeHSI(220,1.0,1.0,i); break;
-			break;
+			writeHSI(220,1.0,1.0,seg); break;
 
 		case MODE1:
-		case MODE2:
-		case MODE3:
-		case MODE4:
-		case MODE5:
-		case MODE6:
+        case MODE2:
+        case MODE3:
+        case MODE4:
+        case MODE5:
+        case MODE6:
+		    writeRainbow(seg); break;
 		default:
 			break;
 		}
+
 	}
 
 	if(blinkCurSegment){
@@ -142,6 +150,19 @@ void loop() {
     if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
         displayClockTime = millis();
     }
+
+    if(abs(millis() - rainbowRefreshTime) > RAINBOW_SPEED){
+        rainbowRefreshTime = millis();
+
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            switch(segmentData[seg].curMode){
+            default:
+                rainbowIndex[seg] = (rainbowIndex[seg] - 1) % 256;
+                break;
+            }
+        }
+    }
+
     delay(0);
 }
 
@@ -210,6 +231,8 @@ bool checkRepeatBtn(uint32_t buttonPressed){
         case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
         case CTRL3BTN_BRIGHTDOWN:
         case CTRL4BTN_VOLDOWN:
+        case CTRL3BTN_ROW07_4:
+        case CTRL3BTN_ROW08_4:
             Serial.print("Repeat! Using last button press: ");
             Serial.println(lastButtonSave, HEX);
             lastButtonPressed = lastButtonSave;
@@ -473,6 +496,36 @@ bool checkButtonMode(uint32_t buttonPressed, bool doAllSegments){
     case CTRL3BTN_ROW06_4:
         changeMode(SOLID_COLOR16,doAllSegments); break;
 
+    case CTRL3BTN_ROW09_1:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
+        changeMode(MODE1,doAllSegments);
+        break;
+    case CTRL3BTN_ROW09_2:
+        changeMode(MODE2,doAllSegments); break;
+    case CTRL3BTN_ROW09_3:
+        changeMode(MODE3,doAllSegments); break;
+    case CTRL3BTN_ROW10_1:
+        changeMode(MODE4,doAllSegments); break;
+    case CTRL3BTN_ROW10_2:
+        changeMode(MODE5,doAllSegments); break;
+    case CTRL3BTN_ROW10_3:
+        changeMode(MODE6,doAllSegments); break;
+
+    case CTRL3BTN_ROW07_4:
+        if(RAINBOW_SPEED >= 3){
+            RAINBOW_SPEED -= 2;
+        } else {
+            RAINBOW_SPEED = 1;
+        }
+        rainbowRefreshTime = millis();
+        break;
+    case CTRL3BTN_ROW08_4:
+        RAINBOW_SPEED += 2;
+        rainbowRefreshTime = millis();
+        break;
+
     default:
         return false;
     }
@@ -582,6 +635,62 @@ void writeHSI(int h, float s, float i) {
 void writeHSI(int h, float s, float i, uint8_t seg){
     writeRGBW(Color(h,s,i),seg);
 }
+
+void writeRainbow(uint8_t seg){
+    writeRainbow(seg, rainbowIndex[seg]);
+}
+void writeRainbow(uint8_t seg, uint16_t curIdx){
+    if(seg>=numSegments) {return;}
+    uint16_t start = segments[seg];
+    uint16_t stop  = segments[seg+1];
+
+    for (uint16_t i = start; i < stop; i++) {
+        if(irInterrupt()){return;};
+        float hue;
+        switch(segmentData[seg].curMode){
+        case MODE1:
+        default:
+            hue = fmod((((i * 200 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            break;
+        case MODE2:
+            hue = fmod((((i * 75 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            break;
+        case MODE3:
+            hue = fmod((((i * 20 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            break;
+        case MODE4:
+            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 120, 360);
+            break;
+        case MODE5:
+            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 175, 360);
+            break;
+        case MODE6:
+            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 270, 360);
+            break;
+        }
+        float intensity =  1.0 * ((float) brightnessLevels[segmentData[seg].brightness])/255.0;
+        float saturation = 1.0 * ((float) 256-brightnessLevels[numBrightLevels-segmentData[seg].saturation-1])/255.0;
+        Color c = Color(hue,saturation,intensity);
+        strip.setPixelColor(i, strip.Color(c.red, c.green, c.blue, c.white));
+
+//        strip.setPixelColor(i, Wheel(((i * 256 / (stop-start+1)) + curIdx) & 255));
+    }
+    strip.show();
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
 Color adjustSat(Color c, float newSat){
     return Color(c.hue,newSat,c.intensity);
 }
