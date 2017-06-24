@@ -32,7 +32,6 @@ decode_results results;
 
 void setup() {
     // Turn on serial port
-//    while(!Serial){};
     Serial.begin(9600);
     Serial.println("Starting Arduino...");
 
@@ -51,12 +50,9 @@ void setup() {
     // Read data from EEPROM to get previous configuration
 //    writeSegDataToEeprom(eeAddress);
     readSegDataFromEeprom(eeAddress);
-
-//    Serial.println("  Setup done.");
 }
 
 void loop() {
-//    Serial.println("Loop Start");
 	irInterrupt();
 
 	// Switch through different modes
@@ -168,21 +164,6 @@ void loop() {
             case MODE5:
             case MODE6:
             default:
-//                if(seg==0){
-//                    Serial.println("rainbowIndex[0] = (rainbowIndex[0] - rainbowIncrement) % 360;");
-//                    Serial.print("    rainbowIndex[0] = ");
-//                    Serial.println(rainbowIndex[seg]);
-//                    Serial.print("    rainbowIncrement = ");
-//                    Serial.println(rainbowIncrement);
-//                    Serial.print("    (rainbowIndex[0] - rainbowIncrement) = ");
-//                    Serial.println((rainbowIndex[seg] - rainbowIncrement));
-//                    Serial.print("    (rainbowIndex[0] - rainbowIncrement) % 360 = ");
-//                    Serial.println((rainbowIndex[seg] - rainbowIncrement) % 360);
-//                    if((rainbowIndex[seg] - rainbowIncrement) % 360 < 0){
-//                        Serial.print("    if((rainbowIndex[seg] - rainbowIncrement) % 360 < 0) --> ");
-//                        Serial.println(((rainbowIndex[seg] - rainbowIncrement) % 360) + 360);
-//                    }
-//                }
                 rainbowIndex[seg] = (rainbowIndex[seg] - rainbowIncrement) % 360;
                 if(rainbowIndex[seg] < 0){
                     rainbowIndex[seg] += 360;
