@@ -17,9 +17,10 @@ const uint16_t numLeds = 112;
 const uint8_t  numSegments = 6;
 const uint16_t segments[numSegments+1] = {0, 18, 38, 56, 74, 94, 112};
 
-uint16_t rainbowIndex[numSegments+1] = {0,0,0,0,0};
+int16_t rainbowIndex[numSegments] = {0,0,0,0,0,0};
 
-const uint8_t  eeAddress = 0;
+const uint16_t eeAddress = 0;
+uint16_t rainbowIncrement = 4;
 
 SegmentData segmentData[numSegments];
 uint8_t curSeg = 0;
@@ -31,6 +32,7 @@ decode_results results;
 
 void setup() {
     // Turn on serial port
+//    while(!Serial){};
     Serial.begin(9600);
     Serial.println("Starting Arduino...");
 
@@ -49,9 +51,12 @@ void setup() {
     // Read data from EEPROM to get previous configuration
 //    writeSegDataToEeprom(eeAddress);
     readSegDataFromEeprom(eeAddress);
+
+//    Serial.println("  Setup done.");
 }
 
 void loop() {
+//    Serial.println("Loop Start");
 	irInterrupt();
 
 	// Switch through different modes
@@ -156,8 +161,32 @@ void loop() {
 
         for(uint8_t seg = 0; seg < numSegments; seg++){
             switch(segmentData[seg].curMode){
+            case MODE1:
+            case MODE2:
+            case MODE3:
+            case MODE4:
+            case MODE5:
+            case MODE6:
             default:
-                rainbowIndex[seg] = (rainbowIndex[seg] - 1) % 256;
+//                if(seg==0){
+//                    Serial.println("rainbowIndex[0] = (rainbowIndex[0] - rainbowIncrement) % 360;");
+//                    Serial.print("    rainbowIndex[0] = ");
+//                    Serial.println(rainbowIndex[seg]);
+//                    Serial.print("    rainbowIncrement = ");
+//                    Serial.println(rainbowIncrement);
+//                    Serial.print("    (rainbowIndex[0] - rainbowIncrement) = ");
+//                    Serial.println((rainbowIndex[seg] - rainbowIncrement));
+//                    Serial.print("    (rainbowIndex[0] - rainbowIncrement) % 360 = ");
+//                    Serial.println((rainbowIndex[seg] - rainbowIncrement) % 360);
+//                    if((rainbowIndex[seg] - rainbowIncrement) % 360 < 0){
+//                        Serial.print("    if((rainbowIndex[seg] - rainbowIncrement) % 360 < 0) --> ");
+//                        Serial.println(((rainbowIndex[seg] - rainbowIncrement) % 360) + 360);
+//                    }
+//                }
+                rainbowIndex[seg] = (rainbowIndex[seg] - rainbowIncrement) % 360;
+                if(rainbowIndex[seg] < 0){
+                    rainbowIndex[seg] += 360;
+                }
                 break;
             }
         }
@@ -503,26 +532,41 @@ bool checkButtonMode(uint32_t buttonPressed, bool doAllSegments){
         changeMode(MODE1,doAllSegments);
         break;
     case CTRL3BTN_ROW09_2:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
         changeMode(MODE2,doAllSegments); break;
     case CTRL3BTN_ROW09_3:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
         changeMode(MODE3,doAllSegments); break;
     case CTRL3BTN_ROW10_1:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
         changeMode(MODE4,doAllSegments); break;
     case CTRL3BTN_ROW10_2:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
         changeMode(MODE5,doAllSegments); break;
     case CTRL3BTN_ROW10_3:
+        for(uint8_t seg = 0; seg < numSegments; seg++){
+            rainbowIndex[seg] = 0;
+        }
         changeMode(MODE6,doAllSegments); break;
 
     case CTRL3BTN_ROW07_4:
-        if(RAINBOW_SPEED >= 3){
-            RAINBOW_SPEED -= 2;
-        } else {
-            RAINBOW_SPEED = 1;
-        }
+        rainbowIncrement += 1;
         rainbowRefreshTime = millis();
         break;
     case CTRL3BTN_ROW08_4:
-        RAINBOW_SPEED += 2;
+        if(rainbowIncrement > 1){
+            rainbowIncrement -= 1;
+        } else {
+            rainbowIncrement = 1;
+        }
         rainbowRefreshTime = millis();
         break;
 
@@ -643,6 +687,7 @@ void writeRainbow(uint8_t seg, uint16_t curIdx){
     if(seg>=numSegments) {return;}
     uint16_t start = segments[seg];
     uint16_t stop  = segments[seg+1];
+    uint16_t rainbowWidthPxls = 20;
 
     for (uint16_t i = start; i < stop; i++) {
         if(irInterrupt()){return;};
@@ -650,45 +695,52 @@ void writeRainbow(uint8_t seg, uint16_t curIdx){
         switch(segmentData[seg].curMode){
         case MODE1:
         default:
-            hue = fmod((((i * 200 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            rainbowWidthPxls = 10;
+//            hue = fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0);
+            hue = biasRed(fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0));
             break;
         case MODE2:
-            hue = fmod((((i * 75 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            rainbowWidthPxls = segments[0+1]; // one section-ish
+//            hue = fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0);
+            hue = biasRed(fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0));
             break;
         case MODE3:
-            hue = fmod((((i * 20 / (stop-start+1)) + curIdx) % 255) * 1.411, 360);
+            rainbowWidthPxls = numLeds; // full length
+//            hue = fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0);
+            hue = biasRed(fmod((i * (360 / rainbowWidthPxls)) + curIdx, 360.0));
             break;
         case MODE4:
-            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 120, 360);
+            rainbowWidthPxls = numLeds; // full length
+            hue = fmod((((i * (360 / rainbowWidthPxls)) + curIdx) % 40) + 120, 360);
             break;
         case MODE5:
-            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 175, 360);
+            rainbowWidthPxls = numLeds; // full length
+            hue = fmod((((i * (360 / rainbowWidthPxls)) + curIdx) % 40) + 175, 360);
             break;
         case MODE6:
-            hue = fmod((((i * 40 / (stop-start+1)) + curIdx) % 40) * 1.411 + 270, 360);
+            rainbowWidthPxls = numLeds; // full length
+            hue = fmod((((i * (360 / rainbowWidthPxls)) + curIdx) % 40) + 270, 360);
             break;
         }
         float intensity =  1.0 * ((float) brightnessLevels[segmentData[seg].brightness])/255.0;
         float saturation = 1.0 * ((float) 256-brightnessLevels[numBrightLevels-segmentData[seg].saturation-1])/255.0;
         Color c = Color(hue,saturation,intensity);
         strip.setPixelColor(i, strip.Color(c.red, c.green, c.blue, c.white));
-
-//        strip.setPixelColor(i, Wheel(((i * 256 / (stop-start+1)) + curIdx) & 255));
     }
     strip.show();
 }
 
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+float biasRed(float inputHue){
+//    float scaling = 20.0;
+//    float factor  = -0.576883720633533;
+    float scaling = 50.0;
+    float factor  = -0.753332478;
+
+    if(inputHue >= 180.0){
+        return fmod(360.0-(360.0-inputHue)/(scaling*pow(360.0-inputHue,factor)),360.0);
+    } else {
+        return fmod(inputHue/(scaling*pow(inputHue,factor)),360.0);
+    }
 }
 
 Color adjustSat(Color c, float newSat){

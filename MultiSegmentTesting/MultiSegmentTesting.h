@@ -136,7 +136,7 @@ void writeHSI(int h, float s, float i);
 void writeHSI(int h, float s, float i, uint8_t seg);
 void writeRainbow(uint8_t seg);
 void writeRainbow(uint8_t seg, uint16_t curIdx);
-uint32_t Wheel(byte WheelPos);
+float biasRed(float inputHue);
 Color adjustSat(Color c, float newSat);
 Color adjustInt(Color c, float newInt);
 void waitForButton(unsigned long i);
