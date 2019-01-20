@@ -201,14 +201,6 @@ void loop() {
         writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
         break;
 
-    case 4 :
-        writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
-        break;
-
-    case 5 :
-        writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-        break;
-
     default:
         curMode = 0; // Loop back
         break;
@@ -762,9 +754,15 @@ void writeRGB(int rgb[]){
 }
 
 void writeRGB(Color c){
-    if(curMode==offMode){
+    switch(curMode){
+    case offMode:
+    case 2:
+    case 3:
         c = adjustInt(c,c.intensity * ((float) brightnessLevels[adjustBrightnessVal])/255.0);
         c = adjustSat(c,c.sat * ((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
+        break;
+    default:
+        break;
     }
     isManualOn = false;
     PREV = c; // Save the new color to the 'previous' value
