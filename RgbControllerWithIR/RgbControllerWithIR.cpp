@@ -55,14 +55,18 @@ void setup() {
     digitalClockDisplay();
 
     // Set up alarms (must be monotonic)
-    timeAlarms[0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
-    timeAlarms[1] = calcTOD( 5, 45, 00); //   5:45am
-    timeAlarms[2] = calcTOD( 6, 15, 00); //   6:15am
-    timeAlarms[3] = calcTOD( 6, 30, 00); //   6:30am
-    timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
-    timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
-    timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
-    timeAlarms[7] = calcTOD(23, 59, 59); // The last alarm should be the latest time
+    timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+    timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+    timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
+    timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
+    timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
+    timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
+    timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
+    timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
+    timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+    timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
+    timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+    timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
 
     // Set up sun alarms (relating to sunrise/sunset), these will be configured on startup
     sunAlarms[ 0] = calcTOD( 0, 00, 00); // Night
@@ -215,18 +219,40 @@ void loop() {
                     break;
                 }
             } else {
+//                timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+//                timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+//                timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
+//                timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
+//                timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
+//                timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
+//                timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
+//                timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
+//                timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+//                timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
+//                timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+//                timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
                 switch(curAlarm){
-                case 1: // timeAlarms[1] = calcTOD( 5, 45, 00);
-                    crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
+                case 3: // timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
+                    crossFadeTo(adjustInt(YELLOW,0.50),1000.0*30.0);
                     break;
-                case 2: // timeAlarms[2] = calcTOD( 6, 15, 00);
-                    crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
+                case 4: // timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
+                    crossFadeTo(adjustInt(GREEN,0.75),1000.0*5.0);
                     break;
-                case 3: // timeAlarms[3] = calcTOD( 6, 30, 00);
-                    crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
-                    break;
-                case 4: // timeAlarms[4] = calcTOD( 7, 30, 00);
+                case 6: // timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
                     crossFadeTo(OFF,1000.0*90.0);
+                    break;
+                case 8: // timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+                    crossFadeTo(adjustInt(RED,0.75),1000.0*30.0);
+                    break;
+                case 9: // timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
+                    crossFadeTo(adjustInt(RED,0.5),1000.0*30.0);
+                    break;
+                case  0: // timeAlarms[ 0] = calcTOD( 0, 00, 00);
+                case  1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+                case  2: // timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
+                case 10: // timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+                case 11: // timeAlarms[11] = calcTOD(23, 59, 59);
+                    crossFadeTo(adjustInt(RED,0.25),1000.0*30.0);
                     break;
                 default:
                     break;
@@ -361,8 +387,10 @@ void loop() {
 //                sunAlarms[11] = calcTOD(23, 59, 59); // Night
                 switch(curSunAlarm){
                 case 7: // sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
-                    doSunAlarm = true;
-                    doAlarmOnceFlag = true;
+                    if(curAlarm<8){ // timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+                        doSunAlarm = true;
+                        doAlarmOnceFlag = true;
+                    }
                     break;
                 default:
                     break;
