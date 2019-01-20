@@ -64,6 +64,20 @@ void setup() {
     timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
     timeAlarms[7] = calcTOD(23, 59, 59); // The last alarm should be the latest time
 
+    // Set up sun alarms (relating to sunrise/sunset), these will be configured on startup
+    sunAlarms[ 0] = calcTOD( 0, 00, 00); // Night
+    sunAlarms[ 1] = calcTOD( 0, 00, 00); // Astronomical Sunrise
+    sunAlarms[ 2] = calcTOD( 0, 00, 00); // Nautical Sunrise
+    sunAlarms[ 3] = calcTOD( 0, 00, 00); // Civil Sunrise
+    sunAlarms[ 4] = calcTOD( 0, 00, 00); // Sunrise (apparent)
+    sunAlarms[ 5] = calcTOD( 0, 00, 00); // Day
+    sunAlarms[ 6] = calcTOD( 0, 00, 00); // Sunset (apparent)
+    sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+    sunAlarms[ 8] = calcTOD( 0, 00, 00); // Nautical Sunset
+    sunAlarms[ 9] = calcTOD( 0, 00, 00); // Astronomical Sunset
+    sunAlarms[10] = calcTOD( 0, 00, 00); // Night
+    sunAlarms[11] = calcTOD(23, 59, 59); // Night
+
     Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
 
     // Make sure LED is off
@@ -256,7 +270,7 @@ void loop() {
         break;
     }
 
-    // Update sunrise/sunset times
+    // Update sun alarm times based on the sunrise/sunset
     if(sunriseUpdateTime==0 || abs(millis() - sunriseUpdateTime) > SUNRISECHECK_TIMEOUT){
         sunriseUpdateTime = millis();
 
@@ -274,6 +288,20 @@ void loop() {
         Serial.println(curSunrise);
         Serial.print("Updated sunset time (min past midnight): ");
         Serial.println(curSunset);
+
+        // Adjust alarm times based on sunrise/sunset
+        sunAlarms[ 0] = calcTOD(00, 00, 00); // Night
+        sunAlarms[ 1] = calcTOD((curSunrise-90) / 60, (curSunrise-90) % 60, 00); // Astronomical Sunrise
+        sunAlarms[ 2] = calcTOD((curSunrise-60) / 60, (curSunrise-60) % 60, 00); // Nautical Sunrise
+        sunAlarms[ 3] = calcTOD((curSunrise-30) / 60, (curSunrise-30) % 60, 00); // Civil Sunrise
+        sunAlarms[ 4] = calcTOD((curSunrise-00) / 60, (curSunrise-00) % 60, 00); // Sunrise (apparent)
+        sunAlarms[ 5] = calcTOD((curSunrise+30) / 60, (curSunrise+30) % 60, 00); // Day
+        sunAlarms[ 6] = calcTOD((curSunset+00)  / 60, (curSunset+00)  % 60, 00); // Sunset (apparent)
+        sunAlarms[ 7] = calcTOD((curSunset+30)  / 60, (curSunset+30)  % 60, 00); // Civil Sunset
+        sunAlarms[ 8] = calcTOD((curSunset+60)  / 60, (curSunset+60)  % 60, 00); // Nautical Sunset
+        sunAlarms[ 9] = calcTOD((curSunset+90)  / 60, (curSunset+90)  % 60, 00); // Astronomical Sunset
+        sunAlarms[10] = calcTOD((curSunset+120)  / 60, (curSunset+120)  % 60, 00); // Night
+        sunAlarms[11] = calcTOD(23, 59, 59); // Night
     }
 
     // Check alarm times versus the current time
@@ -292,6 +320,13 @@ void loop() {
             if(timeAlarms[i] < curTime && curTime < timeAlarms[i+1] && curAlarm!=i){
                 doAlarmOnceFlag = true;
                 curAlarm = i;
+            }
+        }
+
+        // Also check all the sun alarm timers
+        for(int i = 0; i<NUMSUNALARMS-1; i++){
+            if(sunAlarms[i] < curTime && curTime < sunAlarms[i+1] && curSunAlarm!=i){
+                curSunAlarm = i;
             }
         }
     }

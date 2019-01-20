@@ -148,6 +148,7 @@ const int offMode = 0;
 const int alarmMode = 1; // this is the state number of when the alarms will go off (see if-statements in loop())
 const int dynamicMode = 2;
 const int NUMALARMS = 8;
+const int NUMSUNALARMS = 12;
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;  // milliseconds
 const uint16_t ALARMCHECK_TIMEOUT = 5000;    // milliseconds
 const long SUNRISECHECK_TIMEOUT = 86400000L; // milliseconds
@@ -168,6 +169,7 @@ LightMode prevColorMode = MODE_OFF;
 LightMode  curColorMode = MODE_OFF;
 int curMode = offMode;
 int curAlarm = 0;
+int curSunAlarm = 0;
 int countMode = 0;
 bool doModeOnceFlag = true;
 bool doAlarmOnceFlag = true;
@@ -187,6 +189,7 @@ float hsi_Intensity = 1.0;
 
 // Miscellaneous
 long timeAlarms[NUMALARMS];
+long sunAlarms[NUMSUNALARMS]; // apparent, civil, nautical, and astronomical
 long displayClockTime = 0;
 long alarmCheckTime = 0;
 long sunriseUpdateTime = 0;
