@@ -261,50 +261,62 @@ void loop() {
         }
         break;
 
-    case dynamicMode :
-        // Dynamic State
-        if(doModeOnce()){
-            crossFadeTo(PINK,250);
-            crossFadeTo(PURPLE,250);
-            crossFadeTo(BLUE,250);
-            crossFadeTo(OFF,250);
-            waitForButton(1000);
-        }
-        switch(curAlarm){
-        case 1: // timeAlarms[1] = calcTOD( 5, 45, 00); //   5:45am
-        case 2: // timeAlarms[2] = calcTOD( 6, 15, 00); //   6:15am
-        case 3: // timeAlarms[3] = calcTOD( 6, 30, 00); //   6:30am
-            writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
-            break;
-        case 4: // timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
-            writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
+//    case dynamicMode :
+//        // Dynamic State
+//        if(doModeOnce()){
+//            crossFadeTo(PINK,250);
+//            crossFadeTo(PURPLE,250);
+//            crossFadeTo(BLUE,250);
+//            crossFadeTo(OFF,250);
+//            waitForButton(1000);
+//        }
+////        timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
+////        timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+////        timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
+////        timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
+////        timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
+////        timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
+////        timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
+////        timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
+////        timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+////        timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
+////        timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+////        timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
+//        switch(curAlarm){
+//        case 1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+//        case 2: // timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
+//        case 3: // timeAlarms[3] = calcTOD( 7, 05, 00); //   7:05am
+//            writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
+//            break;
+//        case 4: // timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
+//            writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
+//
+//            break;
+//        case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
+//            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
+//            break;
+//        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00);
+//        case 6: // timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
+//        case 7: // timeAlarms[7] = calcTOD(23, 59, 59);
+//        default:
+//            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
+//            break;
+//        }
+//        break;
 
-            break;
-        case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
-            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
-            break;
-        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00);
-        case 6: // timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
-        case 7: // timeAlarms[7] = calcTOD(23, 59, 59);
-        default:
-            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-            break;
-        }
-        break;
-
-    case 3 :
+    case 2 :
         writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
         break;
 
-    case 4 :
+    case 3 :
         writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
         break;
 
-    case 5 :
+    case 4 :
         writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
         break;
 
-    case 6 :
+    case 5 :
         writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
         break;
 
