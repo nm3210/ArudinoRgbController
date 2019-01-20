@@ -9,6 +9,9 @@
 IRrecv irrecv(IR_PIN);
 decode_results results;
 
+// Find the sunrise/sunset at the 'home' location
+Dusk2Dawn home(00.0, 00.0, 0);
+
 // US Eastern Time Zone (New York, Detroit)
 TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; //Daylight time = UTC - 4 hours
 TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  //Standard time = UTC - 5 hours
@@ -253,7 +256,27 @@ void loop() {
         break;
     }
 
-//     Check alarm times versus the current time
+    // Update sunrise/sunset times
+    if(sunriseUpdateTime==0 || abs(millis() - sunriseUpdateTime) > SUNRISECHECK_TIMEOUT){
+        sunriseUpdateTime = millis();
+
+        // Grab current time and adjust for timezone and daylight savings
+        time_t local = myTZ.toLocal(now());
+        int curYear  = year(local);
+        int curMonth = month(local);
+        int curDay   = day(local);
+
+        // Calculate sunrise/sunset times
+        curSunrise = home.sunrise(curYear, curMonth, curDay, myTZ.locIsDST(local)) + 180;
+        curSunset  = home.sunset (curYear, curMonth, curDay, myTZ.locIsDST(local)) + 180;
+
+        Serial.print("Updated sunrise time (min past midnight): ");
+        Serial.println(curSunrise);
+        Serial.print("Updated sunset time (min past midnight): ");
+        Serial.println(curSunset);
+    }
+
+    // Check alarm times versus the current time
     if(abs(millis() - alarmCheckTime) > ALARMCHECK_TIMEOUT){
         alarmCheckTime = millis();
 

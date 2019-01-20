@@ -12,6 +12,7 @@
 #include "DS1307RTC.h"
 #include "IRremote.h"
 #include "Timezone.h"
+#include "Dusk2Dawn.h"
 
 // Define buttons
 // I'm having a very hard time finding a good sweet spot for the IR
@@ -147,8 +148,9 @@ const int offMode = 0;
 const int alarmMode = 1; // this is the state number of when the alarms will go off (see if-statements in loop())
 const int dynamicMode = 2;
 const int NUMALARMS = 8;
-const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;
-const uint16_t ALARMCHECK_TIMEOUT = 1000;
+const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;  // milliseconds
+const uint16_t ALARMCHECK_TIMEOUT = 5000;    // milliseconds
+const long SUNRISECHECK_TIMEOUT = 86400000L; // milliseconds
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
@@ -187,7 +189,10 @@ float hsi_Intensity = 1.0;
 long timeAlarms[NUMALARMS];
 long displayClockTime = 0;
 long alarmCheckTime = 0;
+long sunriseUpdateTime = 0;
 uint16_t count = 0;
+int curSunrise = 0;
+int curSunset = 0;
 
 // Initialize the main hsi2rgb function
 void hsi2rgb(int H, float S, float I, int* rgb);
