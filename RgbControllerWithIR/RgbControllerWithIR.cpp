@@ -175,17 +175,17 @@ void loop() {
                     crossFadeTo(OFF,1000.0*90.0);
                     break;
                 case 8: // timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
-                    crossFadeTo(adjustInt(RED,0.75),1000.0*30.0);
+                    crossFadeTo(adjustInt(controlColor,0.75),1000.0*30.0);
                     break;
                 case 9: // timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
-                    crossFadeTo(adjustInt(RED,0.5),1000.0*30.0);
+                    crossFadeTo(adjustInt(controlColor,0.5),1000.0*30.0);
                     break;
                 case  0: // timeAlarms[ 0] = calcTOD( 0, 00, 00);
                 case  1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
                 case  2: // timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
                 case 10: // timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
                 case 11: // timeAlarms[11] = calcTOD(23, 59, 59);
-                    crossFadeTo(adjustInt(RED,0.25),1000.0*30.0);
+                    crossFadeTo(adjustInt(controlColor,0.25),1000.0*30.0);
                     break;
                 default:
                     break;
