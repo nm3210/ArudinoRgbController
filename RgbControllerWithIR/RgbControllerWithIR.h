@@ -1,9 +1,3 @@
-// Only modify this file to include
-// - function definitions (prototypes)
-// - include files
-// - extern variable definitions
-// In the appropriate section
-
 #ifndef _RgbControllerWithIR_H_
 #define _RgbControllerWithIR_H_
 #include "Arduino.h"
@@ -21,8 +15,8 @@
 // frequency matching, but this solution is easier...
 // 2017-01-23 update: most of the frustrations have gone away by
 // changing the tolerance to 40%
-
 #define BTN_REPEAT           0xFFFFFFFF
+
 // 17 Key NumPad + D-Pad Remote
 #define CTRL1BTN_1           0xFFA25D // E318261B and FFA25D
 #define CTRL1BTN_2           0xFF629D // 511DBB   and FF629D
@@ -137,15 +131,12 @@ enum LightMode{
 
 #define numBrightLevels 16
 uint8_t brightnessLevels[numBrightLevels] = {
-//    1, 2, 5, 11, 24, 52, 116, 255 // 8
-//    1, 2, 3, 6, 12, 22, 40, 75, 139, 255 // 10
-//        1, 2, 3, 4, 5, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
-        0, 1, 2, 3, 4, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
+    0, 1, 2, 3, 4, 6, 9, 14, 19, 28, 40, 58, 84, 122, 176, 255 // 16
 };
 
 // Constant variables
 const int offMode = 0;
-const int alarmMode = 1; // this is the state number of when the alarms will go off (see if-statements in loop())
+const int alarmMode = 1; // This is the state number of when the alarms will go off (see if-statements in loop())
 const int dynamicMode = 2;
 const int NUMALARMS = 12;
 const int NUMSUNALARMS = 12;
@@ -155,7 +146,7 @@ const long SUNRISECHECK_TIMEOUT = 86400000L; // milliseconds
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
-const signed int offsetSecPerYear = 5012; // time offset for DS1307 chip, I think it changes based on how much processing you're doing
+const signed int offsetSecPerYear = 5012; // Time offset for DS1307 chip, I think it changes based on how much processing you're doing
 
 // RAM-specific variables to keep track while handling the interrupts
 volatile unsigned long interruptCurTime = 0;
@@ -211,11 +202,13 @@ public:
     Color(int h, float s, float i){
         int rgbTemp[3];
         hue = h; sat = s; intensity = i;
+
         // Convert HSI to RGB
         hsi2rgb(hue, sat, intensity, rgbTemp);
         red = rgbTemp[0];
         green = rgbTemp[1];
         blue = rgbTemp[2];
+
         // Store hash
         hash = (hue+1)*(red+1)*(green+1)*(blue+1);
     }
@@ -241,7 +234,6 @@ static const Color CYAN    (180, 1.00, 1.00);
 static const Color ORANGE  ( 15, 1.00, 1.00);
 static const Color INDIGO  (252, 1.00, 0.20);
 static const Color VIOLET  (250, 1.00, 1.00);
-//static const Color VIOLET  (252, 1.00, 0.40);
 static const Color PINK    (277, 0.90, 1.00);
 
 static const Color WHITE   (  0, 0.00, 1.00);
@@ -250,6 +242,7 @@ static const Color BLACK   (  0, 0.00, 0.00);
 static const Color ON = WHITE;
 static const Color OFF = BLACK;
 static const Color PURPLE = VIOLET;
+
 Color PREV (0,0,0); // create the 'previous' color variable
 Color controlColor = RED; // reference the current manual (via ir) color
 int MANUAL[3] = {0,0,0};
@@ -289,5 +282,4 @@ bool doAlarmOnce();
 int wrapCount(uint16_t mod);
 int loopCount(uint16_t n);
 
-//Do not add code below this line
 #endif /* _RgbControllerWithIR_H_ */

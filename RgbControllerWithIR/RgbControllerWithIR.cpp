@@ -1,4 +1,3 @@
-// Do not remove the include below
 #include "RgbControllerWithIR.h"
 
 #define IR_PIN   2
@@ -13,8 +12,8 @@ decode_results results;
 Dusk2Dawn home(00.0, 00.0, 0);
 
 // US Eastern Time Zone (New York, Detroit)
-TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; //Daylight time = UTC - 4 hours
-TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  //Standard time = UTC - 5 hours
+TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; // Daylight time = UTC - 4 hours
+TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  // Standard time = UTC - 5 hours
 Timezone myTZ(myDST, mySTD);
 
 void setup() {
@@ -106,7 +105,7 @@ void loop() {
     // Switch through different modes
     switch(curMode){
     case offMode :
-        // OFF State (just don't do anything)
+        // OFF State (which really acts as a method to change color via IR)
         if(doModeOnce()){
             curColorMode = MODE_OFF;
             crossFade(WHITE,OFF,1500);
@@ -193,49 +192,6 @@ void loop() {
             }
         }
         break;
-
-//    case dynamicMode :
-//        // Dynamic State
-//        if(doModeOnce()){
-//            crossFadeTo(PINK,250);
-//            crossFadeTo(PURPLE,250);
-//            crossFadeTo(BLUE,250);
-//            crossFadeTo(OFF,250);
-//            waitForButton(1000);
-//        }
-////        timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
-////        timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
-////        timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
-////        timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
-////        timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
-////        timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
-////        timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
-////        timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
-////        timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
-////        timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
-////        timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
-////        timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
-//        switch(curAlarm){
-//        case 1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
-//        case 2: // timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
-//        case 3: // timeAlarms[3] = calcTOD( 7, 05, 00); //   7:05am
-//            writeHSI(wrapCount(360),1.0,0.1); Alarm.delay(25);
-//            break;
-//        case 4: // timeAlarms[4] = calcTOD( 7, 30, 00); //   7:30am
-//            writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
-//
-//            break;
-//        case 5: // timeAlarms[5] = calcTOD(19, 00, 00); //   7:00pm
-//            writeHSI(loopCount(120)+120,1.0,1.0); Alarm.delay(25);
-//            break;
-//        case 0: // timeAlarms[0] = calcTOD( 0, 00, 00);
-//        case 6: // timeAlarms[6] = calcTOD(22, 00, 00); //  10:00pm
-//        case 7: // timeAlarms[7] = calcTOD(23, 59, 59);
-//        default:
-//            writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-//            break;
-//        }
-//        break;
 
     case 2 :
         writeHSI(wrapCount(360),1.0,1.0); Alarm.delay(25);
@@ -362,7 +318,7 @@ void loop() {
 // Function for the AIN0 interrupt; need to keep all the variables as volatile, can't really call other [complex] functions
 ISR(ANALOG_COMP_vect) {
     interruptCurTime = millis();
-    //check to see if the interrupt was called in the last 250 milliseconds
+    // Check to see if the interrupt was called in the last 250 milliseconds
     if (abs(interruptCurTime - interruptLastTime) > 250) {
         interruptLastTime = interruptCurTime;
         changeMode = true;
@@ -391,9 +347,6 @@ bool handleInterrupt(){
 
     if(changedModes && curColorMode!=prevColorMode && curColorMode!=MODE_OFF){
         Serial.print("curColorMode = "); Serial.println(curColorMode);
-//        doModeOnceFlag = true;
-//        count = 0;
-//        blinkRGBnTimes(WHITE,2);
     }
 
     return changedModes;
@@ -404,7 +357,7 @@ long decodeIrSignal(){
     while (!irrecv.isIdle());
     if (irrecv.decode(&results)) {
         tempResults = results.value;
-        Serial.println(results.value, HEX); //print the value
+        Serial.println(results.value, HEX); // Print the value
         // Restart the ir receiver state
         irrecv.resume();
     }
@@ -417,14 +370,14 @@ bool checkBrightnessChange(){
     case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
     case CTRL3BTN_BRIGHTUP:
     case CTRL4BTN_VOLUP:
-        //do bright increase
+        // Do bright increase
         adjustBrightnessVal = constrain(adjustBrightnessVal + 1,1,numBrightLevels-1);
         break;
 //    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
     case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
     case CTRL3BTN_BRIGHTDOWN:
     case CTRL4BTN_VOLDOWN:
-        // do bright decrease
+        // Do bright decrease
         adjustBrightnessVal = constrain(adjustBrightnessVal - 1,1,numBrightLevels-1);
         break;
     default:
@@ -491,12 +444,6 @@ bool checkModesSpecial(){
         MANUAL[2] = brightnessLevels[manualBlueIndex];
         changeColorMode(MANUAL_COLOR);
         break;
-//    case CTRL3BTN_ROW07_4: // WHITE UP
-//        checkForManualColor();
-//        manualWhiteIndex = constrain(manualWhiteIndex + 1,0,numBrightLevels-1);
-//        MANUAL[3] = brightnessLevels[manualWhiteIndex];
-//        changeColorMode(MANUAL_COLOR);
-//        break;
 
     case CTRL3BTN_ROW08_1: // Red DOWN
         checkForManualColor();
@@ -516,51 +463,25 @@ bool checkModesSpecial(){
         MANUAL[2] = brightnessLevels[manualBlueIndex];
         changeColorMode(MANUAL_COLOR);
         break;
-//    case CTRL3BTN_ROW08_4: // WHITE DOWN
-//        checkForManualColor();
-//        manualWhiteIndex = constrain(manualWhiteIndex - 1,0,numBrightLevels-1);
-//        MANUAL[3] = brightnessLevels[manualWhiteIndex];
-//        changeColorMode(MANUAL_COLOR);
-//        break;
-
-//    case CTRL1BTN_UP:   // case CTRL1BTN2_UP:
-//        adjustSaturationVal = constrain(adjustSaturationVal + 1,0,numBrightLevels-1);
-//        Serial.print("New sat value: "); Serial.println(((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
-//        return false;
-//    case CTRL1BTN_DOWN: // case CTRL1BTN2_DOWN:
-//        adjustSaturationVal = constrain(adjustSaturationVal - 1,0,numBrightLevels-1);
-//        Serial.print("New sat value: "); Serial.println(((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
-//        return false;
-//    case CTRL1BTN_LEFT: // case CTRL1BTN2_LEFT:
-//        curHueVal = (((curHueVal-1) % 360) + 360) % 360; // (((curHueVal-1) % 360) + 360) % 360
-//        Serial.print("New hue value: "); Serial.println(curHueVal);
-//        return false;
-//    case CTRL1BTN_RIGHT: // case CTRL1BTN2_RIGHT:
-//        curHueVal = (((curHueVal+1) % 360) + 360) % 360;
-//        Serial.print("New hue value: "); Serial.println(curHueVal);
-//        return false;
     default:
         return false;
     }
     return true;
 }
+
 bool checkModes(){
     switch(lastButtonPressed){
     case CTRL2BTN_RED: // case CTRL2BTN2_RED:
     case CTRL3BTN_RED:
-//        Serial.println("Mode: SOLID_RED");
         changeColorMode(SOLID_RED); break;
     case CTRL2BTN_GREEN: // case CTRL2BTN2_GREEN:
     case CTRL3BTN_GREEN:
-//        Serial.println("Mode: SOLID_GREEN");
         changeColorMode(SOLID_GREEN); break;
     case CTRL2BTN_BLUE: // case CTRL2BTN2_BLUE:
     case CTRL3BTN_BLUE:
-//        Serial.println("Mode: SOLID_BLUE");
         changeColorMode(SOLID_BLUE); break;
     case CTRL2BTN_WHITE: // case CTRL2BTN2_WHITE:
     case CTRL3BTN_WHITE:
-//        Serial.println("Mode: SOLID_WHITE");
         changeColorMode(SOLID_WHITE); break;
 
     case CTRL2BTN_ROW3_1: // case CTRL2BTN2_ROW2_1:
@@ -628,11 +549,9 @@ bool checkRepeatBtn(uint32_t tempButtonPress){
         case CTRL3BTN_ROW07_1: // Red UP
         case CTRL3BTN_ROW07_2: // Green UP
         case CTRL3BTN_ROW07_3: // Blue UP
-//        case CTRL3BTN_ROW07_4: // WHITE UP
         case CTRL3BTN_ROW08_1: // Red DOWN
         case CTRL3BTN_ROW08_2: // Green DOWN
         case CTRL3BTN_ROW08_3: // Blue DOWN
-//        case CTRL3BTN_ROW08_4: // WHITE DOWN
 //            Serial.print("Repeat! Using last button press: ");
             Serial.println(lastButtonSave, HEX);
             lastButtonPressed = lastButtonSave;
@@ -651,7 +570,6 @@ void checkForManualColor(){
         manualRedIndex   = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[0]);
         manualGreenIndex = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[1]);
         manualBlueIndex  = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[2]);
-//        manualWhiteIndex = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[3]);
     }
     isManualOn = true;
 }
@@ -738,7 +656,7 @@ void digitalClockDisplay(){
 }
 
 void digitalClockDisplay(time_t curTime){
-    // digital clock display of the time
+    // Digital clock display of the time
     Serial.print(year(curTime));
     Serial.print("-");
     print2digits(month(curTime));
@@ -798,7 +716,7 @@ int loopCount(uint16_t mod){
 }
 
 void writeRGB(int r, int g, int b) {
-    // Write the pin values out (this assumes high is off, and low is on);
+    // Write the pin values out (this assumes high is off, and low is on)
     analogWrite(ledPinR, 255-r);
     analogWrite(ledPinG, 255-g);
     analogWrite(ledPinB, 255-b);
@@ -811,9 +729,9 @@ void hsi2rgb(Color c, int* rgb) {
 void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
     // From: http://blog.saikoled.com/post/43693602826/why-every-led-light-should-be-using-hsi
     int r, g, b; float Hue;
-    Hue = fmod(h,360); // cycle H around to 0-360 degrees
+    Hue = fmod(h,360); // Cycle H around to 0-360 degrees
     Hue = M_PI*Hue/(float)180; // Convert to radians.
-    Sat = Sat>0?(Sat<1?Sat:1):0; // clamp S and I to interval [0,1]
+    Sat = Sat>0?(Sat<1?Sat:1):0; // Clamp S and I to interval [0,1]
     Inten = Inten>0?(Inten<2?Inten:2):0;
 
     // Math! Thanks in part to Kyle Miller.
@@ -832,16 +750,13 @@ void hsi2rgb(int h, float Sat, float Inten, int* rgb) {
         g = 255*Inten/3*(1-Sat);
         b = 255*Inten/3*(1+Sat*(  cos(Hue)/cos(M_1PI3-Hue)));
     }
-    rgb[0]=r>0?(r<255?r:255):0;//r;
-    rgb[1]=g>0?(g<255?g:255):0;//g;
-    rgb[2]=b>0?(b<255?b:255):0;//b;
+    rgb[0]=r>0?(r<255?r:255):0;
+    rgb[1]=g>0?(g<255?g:255):0;
+    rgb[2]=b>0?(b<255?b:255):0;
 }
 
 void writeHSI(int h, float s, float i) {
     writeRGB(Color(h,s,i));
-//    int rgbTemp[3];
-//    hsi2rgb(h,s,i,rgbTemp);
-//    writeRGB(rgbTemp);
 }
 
 void writeRGB(int rgb[]){
@@ -878,10 +793,9 @@ void blinkRGBnTimes(Color c, int count){
 void crossFadeHSI(int h1, float s1, float i1,
                   int h2, float s2, float i2, long steps, int dur){
     if(changeMode){writeRGB(OFF);return;}; // Check for button press
-//    if(curMode==offMode && handleInterrupt()){return;};
     if(handleInterrupt()){return;};
-    float rho1 = i1;//(i1!=0)?i1:LOWERLIMIT;
-    float rho2 = i2;//(i2!=0)?i2:LOWERLIMIT;
+    float rho1 = i1; //(i1!=0)?i1:LOWERLIMIT;
+    float rho2 = i2; //(i2!=0)?i2:LOWERLIMIT;
 
     bool ccw = fmod((h2-h1+360.0),360.0) < 180.0;
     float gamma = (180 - abs(fmod(abs(h1-h2),360.0) - 180.0));
@@ -898,10 +812,9 @@ void crossFadeHSI(int h1, float s1, float i1,
     // Loop through the number of steps
     for (int i = 1; i <= steps; i++) {
         if(changeMode){writeRGB(OFF);return;}; // Check for button press (so you can escape the loop)
-    //    if(curMode==offMode && handleInterrupt()){return;};
         if(handleInterrupt()){return;};
 
-        float tempRho = length*((i-1.0)/(steps-1.0)); // calculate one part of the line
+        float tempRho = length*((i-1.0)/(steps-1.0)); // Calculate one part of the line
 
         if (tempRho != 0){
             newRho = sqrt(pow(rho1,2) - 2.0*rho1*tempRho*cos(alpha)+pow(tempRho,2));
@@ -924,8 +837,7 @@ void crossFadeHSI(int h1, float s1, float i1,
             newTheta = fmod(h1-newTheta+360,360.0);
         }
 
-        float newSat = s1+(s2-s1)*((i-1.0)/(steps-1.0)); // simple interpolation
-//        float newInten = i1+(i2-i1)*((i-1.0)/(steps-1.0)); // simple interpolation
+        float newSat = s1+(s2-s1)*((i-1.0)/(steps-1.0)); // Simple interpolation
         writeHSI(newTheta, newSat, newRho);
         Alarm.delay(dur);
     }
@@ -945,9 +857,9 @@ void crossFade(Color c1, Color c2, long steps, int dur){
 }
 
 void crossFade(Color c1, Color c2, float msec){
-    int maxDelay = 5; // set max delay to 5ms (wiggle room)
+    int maxDelay = 5; // Set max delay to 5ms (wiggle room)
     if(msec<maxDelay){return;};
-    int timeStep = max(maxDelay, msec / 100); // default to 100 steps (pretty smooth)
+    int timeStep = max(maxDelay, msec / 100); // Default to 100 steps (pretty smooth)
     long numSteps = (long) (msec/timeStep);
 
     crossFade(c1, c2, numSteps, timeStep);
@@ -964,7 +876,6 @@ void waitForButton(unsigned long i){
     boolean waitLoop = true;
     while(waitLoop){
         if(changeMode){writeRGB(OFF);waitLoop = false;return;};
-    //    if(curMode==offMode && handleInterrupt()){waitLoop = false;return;};
         if(handleInterrupt()){waitLoop = false;return;};
         if(abs(millis() - trackTime) > i){
             waitLoop = false;
@@ -975,13 +886,13 @@ void waitForButton(unsigned long i){
 }
 
 int findClosestIndex(uint8_t values[], uint8_t size, uint8_t find) {
-    int dist = abs(values[0] - find); //calculating first difference
+    int dist = abs(values[0] - find); // Calculating first difference
     int closest = 0;
     int i;
     for (i = 1; i < size; ++i) {
-        if (abs(values[i] - find) < dist) {  //checking for closest value
-            dist = abs(values[i] - find);    //saving closest value in dist
-            closest = i;                     //saving the position of the closest value
+        if (abs(values[i] - find) < dist) {  // Checking for closest value
+            dist = abs(values[i] - find);    // Saving closest value in dist
+            closest = i;                     // Saving the position of the closest value
         }
     }
     return closest;
