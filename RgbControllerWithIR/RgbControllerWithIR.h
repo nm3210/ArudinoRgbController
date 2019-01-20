@@ -173,6 +173,7 @@ int curSunAlarm = 0;
 int countMode = 0;
 bool doModeOnceFlag = true;
 bool doAlarmOnceFlag = true;
+bool doSunAlarm = true;
 bool isManualOn = false;
 
 uint8_t adjustBrightnessVal = 1;

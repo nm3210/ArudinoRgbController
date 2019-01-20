@@ -199,21 +199,38 @@ void loop() {
             waitForButton(1000);
         }
         if(doAlarmOnce()){
-            switch(curAlarm){
-            case 1: // timeAlarms[1] = calcTOD( 5, 45, 00);
-                crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
-                break;
-            case 2: // timeAlarms[2] = calcTOD( 6, 15, 00);
-                crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
-                break;
-            case 3: // timeAlarms[3] = calcTOD( 6, 30, 00);
-                crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
-                break;
-            case 4: // timeAlarms[4] = calcTOD( 7, 30, 00);
-                crossFadeTo(OFF,1000.0*90.0);
-                break;
-            default:
-                break;
+            if (doSunAlarm){
+//                sunAlarms[ 1] = calcTOD( 0, 00, 00); // Astronomical Sunrise
+//                sunAlarms[ 2] = calcTOD( 0, 00, 00); // Nautical Sunrise
+//                sunAlarms[ 3] = calcTOD( 0, 00, 00); // Civil Sunrise
+//                sunAlarms[ 4] = calcTOD( 0, 00, 00); // Sunrise (apparent)
+//                sunAlarms[ 5] = calcTOD( 0, 00, 00); // Day
+//                sunAlarms[ 6] = calcTOD( 0, 00, 00); // Sunset (apparent)
+//                sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+//                sunAlarms[ 8] = calcTOD( 0, 00, 00); // Nautical Sunset
+//                sunAlarms[ 9] = calcTOD( 0, 00, 00); // Astronomical Sunset
+                switch(curSunAlarm){
+                case  7: // sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+                    crossFadeTo(adjustInt(ORANGE,0.5),1000.0*30.0);
+                    break;
+                }
+            } else {
+                switch(curAlarm){
+                case 1: // timeAlarms[1] = calcTOD( 5, 45, 00);
+                    crossFadeTo(adjustInt(RED,0.1),1000.0*30.0);
+                    break;
+                case 2: // timeAlarms[2] = calcTOD( 6, 15, 00);
+                    crossFadeTo(adjustInt(YELLOW,0.2),1000.0*30.0);
+                    break;
+                case 3: // timeAlarms[3] = calcTOD( 6, 30, 00);
+                    crossFadeTo(adjustInt(GREEN,0.3),1000.0*5.0);
+                    break;
+                case 4: // timeAlarms[4] = calcTOD( 7, 30, 00);
+                    crossFadeTo(OFF,1000.0*90.0);
+                    break;
+                default:
+                    break;
+                }
             }
         }
         break;
@@ -318,8 +335,9 @@ void loop() {
         for(int i = 0; i<NUMALARMS-1; i++){
             // Check if our current time is between a set of alarms
             if(timeAlarms[i] < curTime && curTime < timeAlarms[i+1] && curAlarm!=i){
-                doAlarmOnceFlag = true;
                 curAlarm = i;
+                doAlarmOnceFlag = true;
+                doSunAlarm = false;
             }
         }
 
@@ -327,6 +345,28 @@ void loop() {
         for(int i = 0; i<NUMSUNALARMS-1; i++){
             if(sunAlarms[i] < curTime && curTime < sunAlarms[i+1] && curSunAlarm!=i){
                 curSunAlarm = i;
+
+                // Select which alarms should trigger the flag, this makes it easy to only call sunset/night times
+//                sunAlarms[ 0] = calcTOD( 0, 00, 00); // Night
+//                sunAlarms[ 1] = calcTOD( 0, 00, 00); // Astronomical Sunrise
+//                sunAlarms[ 2] = calcTOD( 0, 00, 00); // Nautical Sunrise
+//                sunAlarms[ 3] = calcTOD( 0, 00, 00); // Civil Sunrise
+//                sunAlarms[ 4] = calcTOD( 0, 00, 00); // Sunrise (apparent)
+//                sunAlarms[ 5] = calcTOD( 0, 00, 00); // Day
+//                sunAlarms[ 6] = calcTOD( 0, 00, 00); // Sunset (apparent)
+//                sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+//                sunAlarms[ 8] = calcTOD( 0, 00, 00); // Nautical Sunset
+//                sunAlarms[ 9] = calcTOD( 0, 00, 00); // Astronomical Sunset
+//                sunAlarms[10] = calcTOD( 0, 00, 00); // Night
+//                sunAlarms[11] = calcTOD(23, 59, 59); // Night
+                switch(curSunAlarm){
+                case 7: // sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+                    doSunAlarm = true;
+                    doAlarmOnceFlag = true;
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
