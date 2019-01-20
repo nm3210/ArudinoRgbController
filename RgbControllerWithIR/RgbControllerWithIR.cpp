@@ -96,6 +96,7 @@ void loop() {
     if(changeMode){
         changeMode = false;
         doModeOnceFlag = true;
+        doAlarmOnceFlag = true;
         count = 0;
         curMode++;
         Serial.print("curMode = "); Serial.println(curMode);
