@@ -338,10 +338,8 @@ bool handleInterrupt(){
     // Check for valid button press (meets one of our cases)
     if(lastButtonPressed!=0){
         changedModes |= checkModesSpecial();
-        if(curMode == offMode){ // Only change mode in the 'off' mode
-            checkBrightnessChange();
-            changedModes |= checkModes();
-        }
+        checkBrightnessChange();
+        changedModes |= checkModes();
         lastButtonSave = lastButtonPressed;
     }
 
