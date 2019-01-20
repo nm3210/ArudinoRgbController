@@ -7,10 +7,11 @@
 #ifndef _RgbControllerWithIR_H_
 #define _RgbControllerWithIR_H_
 #include "Arduino.h"
-#include "Time.h"
+#include "TimeLib.h"
 #include "TimeAlarms.h"
 #include "DS1307RTC.h"
 #include "IRremote.h"
+#include "Timezone.h"
 
 // Define buttons
 // I'm having a very hard time finding a good sweet spot for the IR
@@ -254,6 +255,7 @@ void changeColorMode(LightMode newMode);
 long decodeIrSignal();
 void rtcCorrection();
 void digitalClockDisplay();
+void digitalClockDisplay(time_t curTime);
 void print2digits(int digits);
 void hsi2rgb(Color c, int* rgb);
 void writeRGB(Color c);

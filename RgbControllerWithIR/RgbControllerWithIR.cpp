@@ -9,6 +9,11 @@
 IRrecv irrecv(IR_PIN);
 decode_results results;
 
+// US Eastern Time Zone (New York, Detroit)
+TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; //Daylight time = UTC - 4 hours
+TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  //Standard time = UTC - 5 hours
+Timezone myTZ(myDST, mySTD);
+
 void setup() {
     pinMode(A2,OUTPUT);
     pinMode(A3,OUTPUT);
@@ -252,8 +257,11 @@ void loop() {
     if(abs(millis() - alarmCheckTime) > ALARMCHECK_TIMEOUT){
         alarmCheckTime = millis();
 
-        // Grab current time of day
-        long curTime = calcTOD(hour(),minute(),second());
+        // Grab current time and adjust for timezone and daylight savings
+        time_t local = myTZ.toLocal(now());
+
+        // Convert to time of day
+        long curTime = calcTOD(hour(local),minute(local),second(local));
 
         // Loop over all alarms (minus one, for the comparison)
         for(int i = 0; i<NUMALARMS-1; i++){
@@ -268,7 +276,12 @@ void loop() {
     // Print out current time (once every second)
     if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
         displayClockTime = millis();
-        digitalClockDisplay();
+
+        // Grab current time and adjust for timezone and daylight savings
+        time_t utc = now();
+        time_t local = myTZ.toLocal(utc);
+
+        digitalClockDisplay(local);
     }
 
     // This Alarm.delay is needed within the loop() function in order to keep the timers/alarms alive and working
@@ -595,18 +608,22 @@ void rtcCorrection(){
 }
 
 void digitalClockDisplay(){
+    digitalClockDisplay(now());
+}
+
+void digitalClockDisplay(time_t curTime){
     // digital clock display of the time
-    Serial.print(year());
+    Serial.print(year(curTime));
     Serial.print("-");
-    print2digits(month());
+    print2digits(month(curTime));
     Serial.print("-");
-    print2digits(day());
+    print2digits(day(curTime));
     Serial.print(" ");
-    print2digits(hour());
+    print2digits(hour(curTime));
     Serial.print(":");
-    print2digits(minute());
+    print2digits(minute(curTime));
     Serial.print(":");
-    print2digits(second());
+    print2digits(second(curTime));
     Serial.println();
 }
 
