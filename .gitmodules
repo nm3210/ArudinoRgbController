@@ -1,0 +1,18 @@
+[submodule "RgbControllerWithIR/libraries/Dusk2Dawn"]
+	path = RgbControllerWithIR/libraries/Dusk2Dawn
+	url = https://github.com/dmkishi/Dusk2Dawn.git
+[submodule "RgbControllerWithIR/libraries/IRremote"]
+	path = RgbControllerWithIR/libraries/IRremote
+	url = https://github.com/z3t0/Arduino-IRremote.git
+[submodule "RgbControllerWithIR/libraries/Time"]
+	path = RgbControllerWithIR/libraries/Time
+	url = https://github.com/PaulStoffregen/Time.git
+[submodule "RgbControllerWithIR/libraries/TimeAlarms"]
+	path = RgbControllerWithIR/libraries/TimeAlarms
+	url = https://github.com/PaulStoffregen/TimeAlarms.git
+[submodule "RgbControllerWithIR/libraries/Timezone"]
+	path = RgbControllerWithIR/libraries/Timezone
+	url = https://github.com/JChristensen/Timezone.git
+[submodule "RgbControllerWithIR/libraries/Ethernet"]
+	path = RgbControllerWithIR/libraries/Ethernet
+	url = https://github.com/arduino-libraries/Ethernet.git
