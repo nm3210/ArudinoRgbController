@@ -85,7 +85,6 @@ void loop() {
             crossFade(WHITE,OFF,1500);
         }
 
-
         switch(curColorMode){
             case MODE_OFF:
                 writeRGB(OFF); break;
@@ -102,7 +101,6 @@ void loop() {
                 writeRGB(BLUE); break;
             case SOLID_WHITE:
                 writeRGB(WHITE);
-//                writeRGB(255,255,255);
                 break;
             case SOLID_CYAN:
                 writeRGB(CYAN); break;
@@ -112,70 +110,54 @@ void loop() {
                 writeRGB(MAGENTA); break;
 
             case SOLID_COLOR01:
-//                writeRGB(255, 43,  0);
                 writeHSI( 10,1.0,1.0);
                 break;
             case SOLID_COLOR04:
-//                writeRGB(255, 85,  0);
                 writeHSI( 20,1.0,1.0);
                 break;
             case SOLID_COLOR07:
-//                writeRGB(255,128,  0);
                 writeHSI( 30,1.0,1.0);
                 break;
             case SOLID_COLOR10:
-//                writeRGB(255,170,  0);
                 writeHSI( 40,1.0,1.0);
                 break;
 
             case SOLID_COLOR02:
-//                writeRGB(  0,255, 43);
                 writeHSI(130,1.0,1.0);
                 break;
             case SOLID_COLOR05:
-//                writeRGB(  0,255,115);
                 writeHSI(147,1.0,1.0);
                 break;
             case SOLID_COLOR08:
-//                writeRGB(  0,255,183);
                 writeHSI(163,1.0,1.0);
                 break;
             case SOLID_COLOR11:
-//                writeRGB(  0,255,255);
                 writeHSI(180,1.0,1.0);
                 break;
 
             case SOLID_COLOR03:
-//                writeRGB( 85,  0,255);
                 writeHSI(260,1.0,1.0);
                 break;
             case SOLID_COLOR06:
-//                writeRGB(170,  0,255);
                 writeHSI(280,1.0,1.0);
                 break;
             case SOLID_COLOR09:
-//                writeRGB(255,  0,255);
                 writeHSI(300,1.0,1.0);
                 break;
             case SOLID_COLOR12:
-//                writeRGB(255,  0,170);
                 writeHSI(320,1.0,1.0);
                 break;
 
             case SOLID_COLOR13:
-//                writeRGB(255,  0,123);
                 writeHSI(330,1.0,1.0);
                 break;
             case SOLID_COLOR14:
-//                writeRGB(255,  0, 64);/
                 writeHSI(345,1.0,1.0);
                 break;
             case SOLID_COLOR15:
-//                writeRGB(  0,170,255);
                 writeHSI(200,1.0,1.0);
                 break;
             case SOLID_COLOR16:
-//                writeRGB(  0, 85,255);
                 writeHSI(220,1.0,1.0);
                 break;
 
@@ -259,7 +241,6 @@ void loop() {
 
     case 6 :
         writeHSI(loopCount(120)+120,1.0,0.1); Alarm.delay(25);
-//        writeHSI((loopCount(120)+300)%360,1.0,1.0); Alarm.delay(25);
         break;
 
     default:
@@ -284,14 +265,13 @@ void loop() {
         }
     }
 
-//     Print out current time (once every second)
+    // Print out current time (once every second)
     if(abs(millis() - displayClockTime) > CLOCKDISPLAY_TIMEOUT){
         displayClockTime = millis();
         digitalClockDisplay();
     }
 
     // This Alarm.delay is needed within the loop() function in order to keep the timers/alarms alive and working
-//    Alarm.Alarm.delay(0);
     Alarm.delay(0);
 }
 
@@ -805,7 +785,6 @@ void crossFadeHSI(int h1, float s1, float i1,
 //        float newInten = i1+(i2-i1)*((i-1.0)/(steps-1.0)); // simple interpolation
         writeHSI(newTheta, newSat, newRho);
         Alarm.delay(dur);
-
     }
 }
 
