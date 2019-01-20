@@ -113,83 +113,15 @@ void loop() {
         }
 
         switch(curColorMode){
-            case MODE_OFF:
-                writeRGB(OFF); break;
-
-            case MANUAL_COLOR:
-                writeRGB(MANUAL);
-                break;
-
-            case SOLID_RED:
-                writeRGB(RED); break;
-            case SOLID_GREEN:
-                writeRGB(GREEN); break;
-            case SOLID_BLUE:
-                writeRGB(BLUE); break;
-            case SOLID_WHITE:
-                writeRGB(WHITE);
-                break;
-            case SOLID_CYAN:
-                writeRGB(CYAN); break;
-            case SOLID_YELLOW:
-                writeRGB(YELLOW); break;
-            case SOLID_MAGENTA:
-                writeRGB(MAGENTA); break;
-
-            case SOLID_COLOR01:
-                writeHSI( 10,1.0,1.0);
-                break;
-            case SOLID_COLOR04:
-                writeHSI( 20,1.0,1.0);
-                break;
-            case SOLID_COLOR07:
-                writeHSI( 30,1.0,1.0);
-                break;
-            case SOLID_COLOR10:
-                writeHSI( 40,1.0,1.0);
-                break;
-
-            case SOLID_COLOR02:
-                writeHSI(130,1.0,1.0);
-                break;
-            case SOLID_COLOR05:
-                writeHSI(147,1.0,1.0);
-                break;
-            case SOLID_COLOR08:
-                writeHSI(163,1.0,1.0);
-                break;
-            case SOLID_COLOR11:
-                writeHSI(180,1.0,1.0);
-                break;
-
-            case SOLID_COLOR03:
-                writeHSI(260,1.0,1.0);
-                break;
-            case SOLID_COLOR06:
-                writeHSI(280,1.0,1.0);
-                break;
-            case SOLID_COLOR09:
-                writeHSI(300,1.0,1.0);
-                break;
-            case SOLID_COLOR12:
-                writeHSI(320,1.0,1.0);
-                break;
-
-            case SOLID_COLOR13:
-                writeHSI(330,1.0,1.0);
-                break;
-            case SOLID_COLOR14:
-                writeHSI(345,1.0,1.0);
-                break;
-            case SOLID_COLOR15:
-                writeHSI(200,1.0,1.0);
-                break;
-            case SOLID_COLOR16:
-                writeHSI(220,1.0,1.0);
-                break;
-
-            default:
-                break;
+        case MODE_OFF:
+            writeRGB(OFF);
+            break;
+        case MANUAL_COLOR:
+            writeRGB(MANUAL);
+            break;
+        default: // All other colors (see @changeColorMode)
+            writeRGB(controlColor);
+            break;
         }
         break;
 
@@ -725,11 +657,66 @@ void checkForManualColor(){
 }
 
 void changeColorMode(LightMode newMode){
-    if(curMode == offMode){ // Only change mode in the 'off' mode
-        if(curColorMode!=MODE_OFF){
-            prevColorMode = curColorMode;
-        }
-        curColorMode = newMode;
+    if(curColorMode!=MODE_OFF){
+        prevColorMode = curColorMode;
+    }
+    curColorMode = newMode;
+
+    // Update the manual colors
+    switch(curColorMode){
+        case SOLID_RED:
+            controlColor = (RED); break;
+        case SOLID_GREEN:
+            controlColor = (GREEN); break;
+        case SOLID_BLUE:
+            controlColor = (BLUE); break;
+        case SOLID_WHITE:
+            controlColor = (WHITE); break;
+        case SOLID_CYAN:
+            controlColor = (CYAN); break;
+        case SOLID_YELLOW:
+            controlColor = (YELLOW); break;
+        case SOLID_MAGENTA:
+            controlColor = (MAGENTA); break;
+
+        case SOLID_COLOR01:
+            controlColor = Color( 10,1.0,1.0); break;
+        case SOLID_COLOR04:
+            controlColor = Color( 20,1.0,1.0); break;
+        case SOLID_COLOR07:
+            controlColor = Color( 30,1.0,1.0); break;
+        case SOLID_COLOR10:
+            controlColor = Color( 40,1.0,1.0); break;
+
+        case SOLID_COLOR02:
+            controlColor = Color(130,1.0,1.0); break;
+        case SOLID_COLOR05:
+            controlColor = Color(147,1.0,1.0); break;
+        case SOLID_COLOR08:
+            controlColor = Color(163,1.0,1.0); break;
+        case SOLID_COLOR11:
+            controlColor = Color(180,1.0,1.0); break;
+
+        case SOLID_COLOR03:
+            controlColor = Color(260,1.0,1.0); break;
+        case SOLID_COLOR06:
+            controlColor = Color(280,1.0,1.0); break;
+        case SOLID_COLOR09:
+            controlColor = Color(300,1.0,1.0); break;
+        case SOLID_COLOR12:
+            controlColor = Color(320,1.0,1.0); break;
+
+        case SOLID_COLOR13:
+            controlColor = Color(330,1.0,1.0); break;
+        case SOLID_COLOR14:
+            controlColor = Color(345,1.0,1.0); break;
+        case SOLID_COLOR15:
+            controlColor = Color(200,1.0,1.0); break;
+        case SOLID_COLOR16:
+            controlColor = Color(220,1.0,1.0); break;
+
+        default:
+            break;
     }
 }
 

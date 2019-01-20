@@ -251,6 +251,7 @@ static const Color ON = WHITE;
 static const Color OFF = BLACK;
 static const Color PURPLE = VIOLET;
 Color PREV (0,0,0); // create the 'previous' color variable
+Color controlColor = RED; // reference the current manual (via ir) color
 int MANUAL[3] = {0,0,0};
 
 // Function declarations
