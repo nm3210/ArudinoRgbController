@@ -5,8 +5,8 @@
 #define ledPinG 10
 #define ledPinB  5 // Changed from pin 11 because of a conflict with the IRRemote timer
 
-IRrecv irrecv(IR_PIN);
-decode_results results;
+//IRrecv irrecv(IR_PIN);
+//decode_results results;
 
 // Find the sunrise/sunset at the 'home' location
 Dusk2Dawn home(00.0, 00.0, 0);
@@ -40,8 +40,8 @@ void setup() {
     pinMode(ledPinG, OUTPUT);
     pinMode(ledPinB, OUTPUT);
 
-    // Enable IR pin & start receiving data
-    irrecv.enableIRIn();
+//    // Enable IR pin & start receiving data
+//    irrecv.enableIRIn();
 
     // Get the current time from the DS1307
     setSyncProvider(RTC.get);
@@ -88,8 +88,8 @@ void setup() {
 }
 
 void loop() {
-    // Detect IR and change modes
-    handleInterrupt();
+//    // Detect IR and change modes
+//    handleInterrupt();
 
     // Handle button press
     if(changeMode){
@@ -107,21 +107,21 @@ void loop() {
     case offMode :
         // OFF State (which really acts as a method to change color via IR)
         if(doModeOnce()){
-            curColorMode = MODE_OFF;
+//            curColorMode = MODE_OFF;
             crossFade(WHITE,OFF,1500);
         }
 
-        switch(curColorMode){
-        case MODE_OFF:
-            writeRGB(OFF);
-            break;
-        case MANUAL_COLOR:
-            writeRGB(MANUAL);
-            break;
-        default: // All other colors (see @changeColorMode)
-            writeRGB(controlColor);
-            break;
-        }
+//        switch(curColorMode){
+//        case MODE_OFF:
+//            writeRGB(OFF);
+//            break;
+//        case MANUAL_COLOR:
+//            writeRGB(MANUAL);
+//            break;
+//        default: // All other colors (see @changeColorMode)
+//            writeRGB(controlColor);
+//            break;
+//        }
         break;
 
     case alarmMode :
@@ -177,16 +177,16 @@ void loop() {
                     crossFadeTo(OFF,1000.0*90.0);
                     break;
                 case 6: // timeAlarms[ 6] = calcTOD(19, 00, 00); //   7:00pm
-                    crossFadeTo(adjustInt(controlColor,0.75),1000.0*30.0);
+                    crossFadeTo(adjustInt(RED,0.75),1000.0*30.0);
                     break;
                 case 8: // timeAlarms[ 8] = calcTOD(20, 00, 00); //   8:00pm
-                    crossFadeTo(adjustInt(controlColor,0.5),1000.0*30.0);
+                    crossFadeTo(adjustInt(RED,0.5),1000.0*30.0);
                     break;
                 case  0: // timeAlarms[ 0] = calcTOD( 0, 00, 00);
                 case  9: // timeAlarms[ 9] = calcTOD(21, 00, 00); //   9:00pm
                 case 10: // timeAlarms[10] = calcTOD(21, 30, 00); //   9:30pm
                 case 11: // timeAlarms[11] = calcTOD(23, 59, 59);
-                    crossFadeTo(adjustInt(controlColor,0.25),1000.0*30.0);
+                    crossFadeTo(adjustInt(WHITE,1.0),1000.0*60.0);
                     break;
                 default:
                     break;
@@ -321,315 +321,315 @@ ISR(ANALOG_COMP_vect) {
 
 
 // Functions
-bool handleInterrupt(){
-    bool changedModes = false;
-
-    unsigned long tempButtonPress = decodeIrSignal();
-    if(!checkRepeatBtn(tempButtonPress)){
-        lastButtonPressed = tempButtonPress;
-    }
-
-    // Check for valid button press (meets one of our cases)
-    if(lastButtonPressed!=0){
-        changedModes |= checkModesSpecial();
-        checkBrightnessChange();
-        changedModes |= checkModes();
-        lastButtonSave = lastButtonPressed;
-    }
-
-    if(changedModes && curColorMode!=prevColorMode && curColorMode!=MODE_OFF){
-        Serial.print("curColorMode = "); Serial.println(curColorMode);
-    }
-
-    return changedModes;
-}
-
-long decodeIrSignal(){
-    uint32_t tempResults = 0;
-    while (!irrecv.isIdle());
-    if (irrecv.decode(&results)) {
-        tempResults = results.value;
-        Serial.println(results.value, HEX); // Print the value
-        // Restart the ir receiver state
-        irrecv.resume();
-    }
-    return tempResults;
-}
-
-bool checkBrightnessChange(){
-    switch(lastButtonPressed){
-//    case CTRL1BTN_UP: case CTRL1BTN2_UP:
-    case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
-    case CTRL3BTN_BRIGHTUP:
-    case CTRL4BTN_VOLUP:
-        // Do bright increase
-        adjustBrightnessVal = constrain(adjustBrightnessVal + 1,1,numBrightLevels-1);
-        break;
-//    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
-    case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
-    case CTRL3BTN_BRIGHTDOWN:
-    case CTRL4BTN_VOLDOWN:
-        // Do bright decrease
-        adjustBrightnessVal = constrain(adjustBrightnessVal - 1,1,numBrightLevels-1);
-        break;
-    default:
-        return false;
-    }
-    return true;
-}
-
-bool checkModesSpecial(){
-    switch(lastButtonPressed){
-    // Turn things OFF
-    case CTRL2BTN_OFF: // case CTRL2BTN2_OFF:
-        if(curColorMode!=MODE_OFF){
-            changeColorMode(MODE_OFF);
-        } else {
-            return false;
-        }
-        break;
-
-    // Turn things ON
-    case CTRL2BTN_ON: // case CTRL2BTN2_ON:
-        if(curColorMode==MODE_OFF){
-            changeColorMode(prevColorMode);
-        } else {
-            return false;
-        }
-        break;
-
-    // Toggle ON/OFF state
-    case CTRL3BTN_ONOFF:
-        if(curColorMode==MODE_OFF){
-            changeColorMode(prevColorMode);
-        } else {
-            changeColorMode(MODE_OFF);
-        }
-        break;
-
-    // Change mode
-    case CTRL3BTN_ROW01_3:
-        changeMode = true;
-        break;
-
-    case CTRL2BTN_FLASH:  // case CTRL2BTN2_FLASH:
-    case CTRL2BTN_STROBE: // case CTRL2BTN2_STROBE:
-    case CTRL2BTN_FADE:   // case CTRL2BTN2_FADE:
-    case CTRL2BTN_SMOOTH: // case CTRL2BTN2_SMOOTH:
-        break;
-
-    case CTRL3BTN_ROW07_1: // Red UP
-        checkForManualColor();
-        manualRedIndex = constrain(manualRedIndex + 1,0,numBrightLevels-1);
-        MANUAL[0] = brightnessLevels[manualRedIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-    case CTRL3BTN_ROW07_2: // Green UP
-        checkForManualColor();
-        manualGreenIndex = constrain(manualGreenIndex + 1,0,numBrightLevels-1);
-        MANUAL[1] = brightnessLevels[manualGreenIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-    case CTRL3BTN_ROW07_3: // Blue UP
-        checkForManualColor();
-        manualBlueIndex = constrain(manualBlueIndex + 1,0,numBrightLevels-1);
-        MANUAL[2] = brightnessLevels[manualBlueIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-
-    case CTRL3BTN_ROW08_1: // Red DOWN
-        checkForManualColor();
-        manualRedIndex = constrain(manualRedIndex - 1,0,numBrightLevels-1);
-        MANUAL[0] = brightnessLevels[manualRedIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-    case CTRL3BTN_ROW08_2: // Green DOWN
-        checkForManualColor();
-        manualGreenIndex = constrain(manualGreenIndex - 1,0,numBrightLevels-1);
-        MANUAL[1] = brightnessLevels[manualGreenIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-    case CTRL3BTN_ROW08_3: // Blue DOWN
-        checkForManualColor();
-        manualBlueIndex = constrain(manualBlueIndex - 1,0,numBrightLevels-1);
-        MANUAL[2] = brightnessLevels[manualBlueIndex];
-        changeColorMode(MANUAL_COLOR);
-        break;
-    default:
-        return false;
-    }
-    return true;
-}
-
-bool checkModes(){
-    switch(lastButtonPressed){
-    case CTRL2BTN_RED: // case CTRL2BTN2_RED:
-    case CTRL3BTN_RED:
-        changeColorMode(SOLID_RED); break;
-    case CTRL2BTN_GREEN: // case CTRL2BTN2_GREEN:
-    case CTRL3BTN_GREEN:
-        changeColorMode(SOLID_GREEN); break;
-    case CTRL2BTN_BLUE: // case CTRL2BTN2_BLUE:
-    case CTRL3BTN_BLUE:
-        changeColorMode(SOLID_BLUE); break;
-    case CTRL2BTN_WHITE: // case CTRL2BTN2_WHITE:
-    case CTRL3BTN_WHITE:
-        changeColorMode(SOLID_WHITE); break;
-
-    case CTRL2BTN_ROW3_1: // case CTRL2BTN2_ROW2_1:
-    case CTRL3BTN_ROW03_1:
-        changeColorMode(SOLID_COLOR01); break;
-    case CTRL2BTN_ROW3_2: // case CTRL2BTN2_ROW2_2:
-    case CTRL3BTN_ROW03_2:
-        changeColorMode(SOLID_COLOR02); break;
-    case CTRL2BTN_ROW3_3: // case CTRL2BTN2_ROW2_3:
-    case CTRL3BTN_ROW03_3:
-        changeColorMode(SOLID_COLOR03); break;
-    case CTRL2BTN_ROW4_1: // case CTRL2BTN2_ROW3_1:
-    case CTRL3BTN_ROW04_1:
-        changeColorMode(SOLID_COLOR04); break;
-    case CTRL2BTN_ROW4_2: // case CTRL2BTN2_ROW3_2:
-    case CTRL3BTN_ROW04_2:
-        changeColorMode(SOLID_COLOR05); break;
-    case CTRL2BTN_ROW4_3: // case CTRL2BTN2_ROW3_3:
-    case CTRL3BTN_ROW04_3:
-        changeColorMode(SOLID_COLOR06); break;
-    case CTRL2BTN_ROW5_1: // case CTRL2BTN2_ROW4_1:
-    case CTRL3BTN_ROW05_1:
-        changeColorMode(SOLID_COLOR07); break;
-    case CTRL2BTN_ROW5_2: // case CTRL2BTN2_ROW4_2:
-    case CTRL3BTN_ROW05_2:
-        changeColorMode(SOLID_COLOR08); break;
-    case CTRL2BTN_ROW5_3: // case CTRL2BTN2_ROW4_3:
-    case CTRL3BTN_ROW05_3:
-        changeColorMode(SOLID_COLOR09); break;
-    case CTRL2BTN_ROW6_1: // case CTRL2BTN2_ROW5_1:
-    case CTRL3BTN_ROW06_1:
-        changeColorMode(SOLID_COLOR10); break;
-    case CTRL2BTN_ROW6_2: // case CTRL2BTN2_ROW5_2:
-    case CTRL3BTN_ROW06_2:
-        changeColorMode(SOLID_COLOR11); break;
-    case CTRL2BTN_ROW6_3: // case CTRL2BTN2_ROW5_3:
-    case CTRL3BTN_ROW06_3:
-        changeColorMode(SOLID_COLOR12); break;
-
-    case CTRL3BTN_ROW03_4:
-        changeColorMode(SOLID_COLOR13); break;
-    case CTRL3BTN_ROW04_4:
-        changeColorMode(SOLID_COLOR14); break;
-    case CTRL3BTN_ROW05_4:
-        changeColorMode(SOLID_COLOR15); break;
-    case CTRL3BTN_ROW06_4:
-        changeColorMode(SOLID_COLOR16); break;
-
-    default:
-        return false;
-    }
-    return true;
-}
-
-bool checkRepeatBtn(uint32_t tempButtonPress){
-    bool returnVal = false;
-    if(tempButtonPress == BTN_REPEAT){
-        switch(lastButtonSave){
-        case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
-        case CTRL3BTN_BRIGHTUP:
-        case CTRL4BTN_VOLUP:
-        case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
-        case CTRL3BTN_BRIGHTDOWN:
-        case CTRL4BTN_VOLDOWN:
-        case CTRL3BTN_ROW07_1: // Red UP
-        case CTRL3BTN_ROW07_2: // Green UP
-        case CTRL3BTN_ROW07_3: // Blue UP
-        case CTRL3BTN_ROW08_1: // Red DOWN
-        case CTRL3BTN_ROW08_2: // Green DOWN
-        case CTRL3BTN_ROW08_3: // Blue DOWN
-//            Serial.print("Repeat! Using last button press: ");
-            Serial.println(lastButtonSave, HEX);
-            lastButtonPressed = lastButtonSave;
-            returnVal = true;
-            break;
-        default:
-            break;
-        }
-    }
-    return returnVal;
-}
-
-void checkForManualColor(){
-    if(!isManualOn){
-        hsi2rgb(PREV, MANUAL);
-        manualRedIndex   = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[0]);
-        manualGreenIndex = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[1]);
-        manualBlueIndex  = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[2]);
-    }
-    isManualOn = true;
-}
-
-void changeColorMode(LightMode newMode){
-    if(curColorMode!=MODE_OFF){
-        prevColorMode = curColorMode;
-    }
-    curColorMode = newMode;
-
-    // Update the manual colors
-    switch(curColorMode){
-        case SOLID_RED:
-            controlColor = (RED); break;
-        case SOLID_GREEN:
-            controlColor = (GREEN); break;
-        case SOLID_BLUE:
-            controlColor = (BLUE); break;
-        case SOLID_WHITE:
-            controlColor = (WHITE); break;
-        case SOLID_CYAN:
-            controlColor = (CYAN); break;
-        case SOLID_YELLOW:
-            controlColor = (YELLOW); break;
-        case SOLID_MAGENTA:
-            controlColor = (MAGENTA); break;
-
-        case SOLID_COLOR01:
-            controlColor = Color( 10,1.0,1.0); break;
-        case SOLID_COLOR04:
-            controlColor = Color( 20,1.0,1.0); break;
-        case SOLID_COLOR07:
-            controlColor = Color( 30,1.0,1.0); break;
-        case SOLID_COLOR10:
-            controlColor = Color( 40,1.0,1.0); break;
-
-        case SOLID_COLOR02:
-            controlColor = Color(130,1.0,1.0); break;
-        case SOLID_COLOR05:
-            controlColor = Color(147,1.0,1.0); break;
-        case SOLID_COLOR08:
-            controlColor = Color(163,1.0,1.0); break;
-        case SOLID_COLOR11:
-            controlColor = Color(180,1.0,1.0); break;
-
-        case SOLID_COLOR03:
-            controlColor = Color(260,1.0,1.0); break;
-        case SOLID_COLOR06:
-            controlColor = Color(280,1.0,1.0); break;
-        case SOLID_COLOR09:
-            controlColor = Color(300,1.0,1.0); break;
-        case SOLID_COLOR12:
-            controlColor = Color(320,1.0,1.0); break;
-
-        case SOLID_COLOR13:
-            controlColor = Color(330,1.0,1.0); break;
-        case SOLID_COLOR14:
-            controlColor = Color(345,1.0,1.0); break;
-        case SOLID_COLOR15:
-            controlColor = Color(200,1.0,1.0); break;
-        case SOLID_COLOR16:
-            controlColor = Color(220,1.0,1.0); break;
-
-        default:
-            break;
-    }
-}
-
+//bool handleInterrupt(){
+//    bool changedModes = false;
+//
+//    unsigned long tempButtonPress = decodeIrSignal();
+//    if(!checkRepeatBtn(tempButtonPress)){
+//        lastButtonPressed = tempButtonPress;
+//    }
+//
+//    // Check for valid button press (meets one of our cases)
+//    if(lastButtonPressed!=0){
+//        changedModes |= checkModesSpecial();
+//        checkBrightnessChange();
+//        changedModes |= checkModes();
+//        lastButtonSave = lastButtonPressed;
+//    }
+//
+//    if(changedModes && curColorMode!=prevColorMode && curColorMode!=MODE_OFF){
+//        Serial.print("curColorMode = "); Serial.println(curColorMode);
+//    }
+//
+//    return changedModes;
+//}
+//
+//long decodeIrSignal(){
+//    uint32_t tempResults = 0;
+//    while (!irrecv.isIdle());
+//    if (irrecv.decode(&results)) {
+//        tempResults = results.value;
+//        Serial.println(results.value, HEX); // Print the value
+//        // Restart the ir receiver state
+//        irrecv.resume();
+//    }
+//    return tempResults;
+//}
+//
+//bool checkBrightnessChange(){
+//    switch(lastButtonPressed){
+////    case CTRL1BTN_UP: case CTRL1BTN2_UP:
+//    case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
+//    case CTRL3BTN_BRIGHTUP:
+//    case CTRL4BTN_VOLUP:
+//        // Do bright increase
+//        adjustBrightnessVal = constrain(adjustBrightnessVal + 1,1,numBrightLevels-1);
+//        break;
+////    case CTRL1BTN_DOWN: case CTRL1BTN2_DOWN:
+//    case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
+//    case CTRL3BTN_BRIGHTDOWN:
+//    case CTRL4BTN_VOLDOWN:
+//        // Do bright decrease
+//        adjustBrightnessVal = constrain(adjustBrightnessVal - 1,1,numBrightLevels-1);
+//        break;
+//    default:
+//        return false;
+//    }
+//    return true;
+//}
+//
+//bool checkModesSpecial(){
+//    switch(lastButtonPressed){
+//    // Turn things OFF
+//    case CTRL2BTN_OFF: // case CTRL2BTN2_OFF:
+//        if(curColorMode!=MODE_OFF){
+//            changeColorMode(MODE_OFF);
+//        } else {
+//            return false;
+//        }
+//        break;
+//
+//    // Turn things ON
+//    case CTRL2BTN_ON: // case CTRL2BTN2_ON:
+//        if(curColorMode==MODE_OFF){
+//            changeColorMode(prevColorMode);
+//        } else {
+//            return false;
+//        }
+//        break;
+//
+//    // Toggle ON/OFF state
+//    case CTRL3BTN_ONOFF:
+//        if(curColorMode==MODE_OFF){
+//            changeColorMode(prevColorMode);
+//        } else {
+//            changeColorMode(MODE_OFF);
+//        }
+//        break;
+//
+//    // Change mode
+//    case CTRL3BTN_ROW01_3:
+//        changeMode = true;
+//        break;
+//
+//    case CTRL2BTN_FLASH:  // case CTRL2BTN2_FLASH:
+//    case CTRL2BTN_STROBE: // case CTRL2BTN2_STROBE:
+//    case CTRL2BTN_FADE:   // case CTRL2BTN2_FADE:
+//    case CTRL2BTN_SMOOTH: // case CTRL2BTN2_SMOOTH:
+//        break;
+//
+//    case CTRL3BTN_ROW07_1: // Red UP
+//        checkForManualColor();
+//        manualRedIndex = constrain(manualRedIndex + 1,0,numBrightLevels-1);
+//        MANUAL[0] = brightnessLevels[manualRedIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//    case CTRL3BTN_ROW07_2: // Green UP
+//        checkForManualColor();
+//        manualGreenIndex = constrain(manualGreenIndex + 1,0,numBrightLevels-1);
+//        MANUAL[1] = brightnessLevels[manualGreenIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//    case CTRL3BTN_ROW07_3: // Blue UP
+//        checkForManualColor();
+//        manualBlueIndex = constrain(manualBlueIndex + 1,0,numBrightLevels-1);
+//        MANUAL[2] = brightnessLevels[manualBlueIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//
+//    case CTRL3BTN_ROW08_1: // Red DOWN
+//        checkForManualColor();
+//        manualRedIndex = constrain(manualRedIndex - 1,0,numBrightLevels-1);
+//        MANUAL[0] = brightnessLevels[manualRedIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//    case CTRL3BTN_ROW08_2: // Green DOWN
+//        checkForManualColor();
+//        manualGreenIndex = constrain(manualGreenIndex - 1,0,numBrightLevels-1);
+//        MANUAL[1] = brightnessLevels[manualGreenIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//    case CTRL3BTN_ROW08_3: // Blue DOWN
+//        checkForManualColor();
+//        manualBlueIndex = constrain(manualBlueIndex - 1,0,numBrightLevels-1);
+//        MANUAL[2] = brightnessLevels[manualBlueIndex];
+//        changeColorMode(MANUAL_COLOR);
+//        break;
+//    default:
+//        return false;
+//    }
+//    return true;
+//}
+//
+//bool checkModes(){
+//    switch(lastButtonPressed){
+//    case CTRL2BTN_RED: // case CTRL2BTN2_RED:
+//    case CTRL3BTN_RED:
+//        changeColorMode(SOLID_RED); break;
+//    case CTRL2BTN_GREEN: // case CTRL2BTN2_GREEN:
+//    case CTRL3BTN_GREEN:
+//        changeColorMode(SOLID_GREEN); break;
+//    case CTRL2BTN_BLUE: // case CTRL2BTN2_BLUE:
+//    case CTRL3BTN_BLUE:
+//        changeColorMode(SOLID_BLUE); break;
+//    case CTRL2BTN_WHITE: // case CTRL2BTN2_WHITE:
+//    case CTRL3BTN_WHITE:
+//        changeColorMode(SOLID_WHITE); break;
+//
+//    case CTRL2BTN_ROW3_1: // case CTRL2BTN2_ROW2_1:
+//    case CTRL3BTN_ROW03_1:
+//        changeColorMode(SOLID_COLOR01); break;
+//    case CTRL2BTN_ROW3_2: // case CTRL2BTN2_ROW2_2:
+//    case CTRL3BTN_ROW03_2:
+//        changeColorMode(SOLID_COLOR02); break;
+//    case CTRL2BTN_ROW3_3: // case CTRL2BTN2_ROW2_3:
+//    case CTRL3BTN_ROW03_3:
+//        changeColorMode(SOLID_COLOR03); break;
+//    case CTRL2BTN_ROW4_1: // case CTRL2BTN2_ROW3_1:
+//    case CTRL3BTN_ROW04_1:
+//        changeColorMode(SOLID_COLOR04); break;
+//    case CTRL2BTN_ROW4_2: // case CTRL2BTN2_ROW3_2:
+//    case CTRL3BTN_ROW04_2:
+//        changeColorMode(SOLID_COLOR05); break;
+//    case CTRL2BTN_ROW4_3: // case CTRL2BTN2_ROW3_3:
+//    case CTRL3BTN_ROW04_3:
+//        changeColorMode(SOLID_COLOR06); break;
+//    case CTRL2BTN_ROW5_1: // case CTRL2BTN2_ROW4_1:
+//    case CTRL3BTN_ROW05_1:
+//        changeColorMode(SOLID_COLOR07); break;
+//    case CTRL2BTN_ROW5_2: // case CTRL2BTN2_ROW4_2:
+//    case CTRL3BTN_ROW05_2:
+//        changeColorMode(SOLID_COLOR08); break;
+//    case CTRL2BTN_ROW5_3: // case CTRL2BTN2_ROW4_3:
+//    case CTRL3BTN_ROW05_3:
+//        changeColorMode(SOLID_COLOR09); break;
+//    case CTRL2BTN_ROW6_1: // case CTRL2BTN2_ROW5_1:
+//    case CTRL3BTN_ROW06_1:
+//        changeColorMode(SOLID_COLOR10); break;
+//    case CTRL2BTN_ROW6_2: // case CTRL2BTN2_ROW5_2:
+//    case CTRL3BTN_ROW06_2:
+//        changeColorMode(SOLID_COLOR11); break;
+//    case CTRL2BTN_ROW6_3: // case CTRL2BTN2_ROW5_3:
+//    case CTRL3BTN_ROW06_3:
+//        changeColorMode(SOLID_COLOR12); break;
+//
+//    case CTRL3BTN_ROW03_4:
+//        changeColorMode(SOLID_COLOR13); break;
+//    case CTRL3BTN_ROW04_4:
+//        changeColorMode(SOLID_COLOR14); break;
+//    case CTRL3BTN_ROW05_4:
+//        changeColorMode(SOLID_COLOR15); break;
+//    case CTRL3BTN_ROW06_4:
+//        changeColorMode(SOLID_COLOR16); break;
+//
+//    default:
+//        return false;
+//    }
+//    return true;
+//}
+//
+//bool checkRepeatBtn(uint32_t tempButtonPress){
+//    bool returnVal = false;
+//    if(tempButtonPress == BTN_REPEAT){
+//        switch(lastButtonSave){
+//        case CTRL2BTN_BRIGHTUP: // case CTRL2BTN2_BRIGHTUP:
+//        case CTRL3BTN_BRIGHTUP:
+//        case CTRL4BTN_VOLUP:
+//        case CTRL2BTN_BRIGHTDOWN: // case CTRL2BTN2_BRIGHTDOWN:
+//        case CTRL3BTN_BRIGHTDOWN:
+//        case CTRL4BTN_VOLDOWN:
+//        case CTRL3BTN_ROW07_1: // Red UP
+//        case CTRL3BTN_ROW07_2: // Green UP
+//        case CTRL3BTN_ROW07_3: // Blue UP
+//        case CTRL3BTN_ROW08_1: // Red DOWN
+//        case CTRL3BTN_ROW08_2: // Green DOWN
+//        case CTRL3BTN_ROW08_3: // Blue DOWN
+////            Serial.print("Repeat! Using last button press: ");
+//            Serial.println(lastButtonSave, HEX);
+//            lastButtonPressed = lastButtonSave;
+//            returnVal = true;
+//            break;
+//        default:
+//            break;
+//        }
+//    }
+//    return returnVal;
+//}
+//
+//void checkForManualColor(){
+//    if(!isManualOn){
+//        hsi2rgb(PREV, MANUAL);
+//        manualRedIndex   = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[0]);
+//        manualGreenIndex = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[1]);
+//        manualBlueIndex  = findClosestIndex(brightnessLevels, numBrightLevels, MANUAL[2]);
+//    }
+//    isManualOn = true;
+//}
+//
+//void changeColorMode(LightMode newMode){
+//    if(curColorMode!=MODE_OFF){
+//        prevColorMode = curColorMode;
+//    }
+//    curColorMode = newMode;
+//
+//    // Update the manual colors
+//    switch(curColorMode){
+//        case SOLID_RED:
+//            controlColor = (RED); break;
+//        case SOLID_GREEN:
+//            controlColor = (GREEN); break;
+//        case SOLID_BLUE:
+//            controlColor = (BLUE); break;
+//        case SOLID_WHITE:
+//            controlColor = (WHITE); break;
+//        case SOLID_CYAN:
+//            controlColor = (CYAN); break;
+//        case SOLID_YELLOW:
+//            controlColor = (YELLOW); break;
+//        case SOLID_MAGENTA:
+//            controlColor = (MAGENTA); break;
+//
+//        case SOLID_COLOR01:
+//            controlColor = Color( 10,1.0,1.0); break;
+//        case SOLID_COLOR04:
+//            controlColor = Color( 20,1.0,1.0); break;
+//        case SOLID_COLOR07:
+//            controlColor = Color( 30,1.0,1.0); break;
+//        case SOLID_COLOR10:
+//            controlColor = Color( 40,1.0,1.0); break;
+//
+//        case SOLID_COLOR02:
+//            controlColor = Color(130,1.0,1.0); break;
+//        case SOLID_COLOR05:
+//            controlColor = Color(147,1.0,1.0); break;
+//        case SOLID_COLOR08:
+//            controlColor = Color(163,1.0,1.0); break;
+//        case SOLID_COLOR11:
+//            controlColor = Color(180,1.0,1.0); break;
+//
+//        case SOLID_COLOR03:
+//            controlColor = Color(260,1.0,1.0); break;
+//        case SOLID_COLOR06:
+//            controlColor = Color(280,1.0,1.0); break;
+//        case SOLID_COLOR09:
+//            controlColor = Color(300,1.0,1.0); break;
+//        case SOLID_COLOR12:
+//            controlColor = Color(320,1.0,1.0); break;
+//
+//        case SOLID_COLOR13:
+//            controlColor = Color(330,1.0,1.0); break;
+//        case SOLID_COLOR14:
+//            controlColor = Color(345,1.0,1.0); break;
+//        case SOLID_COLOR15:
+//            controlColor = Color(200,1.0,1.0); break;
+//        case SOLID_COLOR16:
+//            controlColor = Color(220,1.0,1.0); break;
+//
+//        default:
+//            break;
+//    }
+//}
+//
 //void rtcCorrection(){
 //    digitalClockDisplay();
 //    Serial.print("rtcCorrection: ");
@@ -760,8 +760,10 @@ void writeRGB(Color c){
     case offMode:
     case 2:
     case 3:
-        c = adjustInt(c,c.intensity * ((float) brightnessLevels[adjustBrightnessVal])/255.0);
-        c = adjustSat(c,c.sat * ((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
+        c = adjustInt(c,c.intensity);
+        c = adjustSat(c,c.sat);
+//        c = adjustInt(c,c.intensity * ((float) brightnessLevels[adjustBrightnessVal])/255.0);
+//        c = adjustSat(c,c.sat * ((float) 256-brightnessLevels[numBrightLevels-adjustSaturationVal-1])/255.0);
         break;
     default:
         break;
@@ -791,7 +793,7 @@ void blinkRGBnTimes(Color c, int count){
 void crossFadeHSI(int h1, float s1, float i1,
                   int h2, float s2, float i2, long steps, int dur){
     if(changeMode){writeRGB(OFF);return;}; // Check for button press
-    if(handleInterrupt()){return;};
+//    if(handleInterrupt()){return;};
     float rho1 = i1; //(i1!=0)?i1:LOWERLIMIT;
     float rho2 = i2; //(i2!=0)?i2:LOWERLIMIT;
 
@@ -810,7 +812,7 @@ void crossFadeHSI(int h1, float s1, float i1,
     // Loop through the number of steps
     for (int i = 1; i <= steps; i++) {
         if(changeMode){writeRGB(OFF);return;}; // Check for button press (so you can escape the loop)
-        if(handleInterrupt()){return;};
+//        if(handleInterrupt()){return;};
 
         float tempRho = length*((i-1.0)/(steps-1.0)); // Calculate one part of the line
 
@@ -874,7 +876,7 @@ void waitForButton(unsigned long i){
     boolean waitLoop = true;
     while(waitLoop){
         if(changeMode){writeRGB(OFF);waitLoop = false;return;};
-        if(handleInterrupt()){waitLoop = false;return;};
+//        if(handleInterrupt()){waitLoop = false;return;};
         if(abs(millis() - trackTime) > i){
             waitLoop = false;
             return;
