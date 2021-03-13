@@ -219,8 +219,8 @@ void loop() {
         int curDay   = day(local);
 
         // Calculate sunrise/sunset times
-        curSunrise = home.sunrise(curYear, curMonth, curDay, myTZ.locIsDST(local)) + 180;
-        curSunset  = home.sunset (curYear, curMonth, curDay, myTZ.locIsDST(local)) + 180;
+        curSunrise = home.sunrise(curYear, curMonth, curDay, myTZ.locIsDST(local));
+        curSunset  = home.sunset (curYear, curMonth, curDay, myTZ.locIsDST(local));
 
         Serial.print("Updated sunrise time (min past midnight): ");
         Serial.println(curSunrise);
