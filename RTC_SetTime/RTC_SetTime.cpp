@@ -28,8 +28,15 @@ void setup() {
            (0 << ACIC) |  // Analog Comparator Input Capture: Disabled
            (1 << ACIS1)| (0 << ACIS0); // Analog Comparator Interrupt Mode: Comparator Interrupt on Falling Output Edge
 
+    Serial.begin(115200);
+    while (!Serial)
+        ; // wait for Arduino Serial Monitor
+    delay(200);
+
     bool parse = false;
     bool config = false;
+
+    delay(200);
 
     // get the date and time the compiler was run
     if (getDate(__DATE__) && getTime(__TIME__)) {
@@ -45,9 +52,7 @@ void setup() {
             }
         }
     }
-    Serial.begin(115200);
-    while (!Serial)
-        ; // wait for Arduino Serial Monitor
+
     delay(200);
     if (parse && config) {
         Serial.print("DS1307 configured Time=");
