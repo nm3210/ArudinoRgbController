@@ -36,13 +36,13 @@ void setup() {
 
 // The loop function is called in an endless loop
 void loop() {
-    if(changeState){
-        Serial.println("Adding one (1) second to DC1307 time.");
-        long addSomeTime = 1;
-        adjustTime(addSomeTime);
-        RTC.set(now()); // Try to write the new time to the DS1307
-        changeState = false;
-    }
+//    if(changeState){
+//        Serial.println("Adding one (1) second to DC1307 time.");
+//        long addSomeTime = 1;
+//        adjustTime(addSomeTime);
+//        RTC.set(now()); // Try to write the new time to the DS1307
+//        changeState = false;
+//    }
     digitalClockDisplay();
     delay(100);
 }
