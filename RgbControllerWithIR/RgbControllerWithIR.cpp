@@ -47,7 +47,7 @@ void setup() {
     setSyncProvider(RTC.get);
     if (timeStatus() != timeSet) {
         Serial.println("RTC: Unable to sync with the RTC, setting time to: ");
-        setTime(00,00,00,01,01,2015);
+        setTime(00,00,00,01,01,2020);
     } else {
         Serial.print("RTC: Successfully set Arduino time to: ");
     }
@@ -56,15 +56,15 @@ void setup() {
     // Set up alarms (must be monotonic)
     timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
     timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
-    timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
-    timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
-    timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
-    timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
-    timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
-    timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
-    timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
-    timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
-    timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+    timeAlarms[ 2] = calcTOD( 7, 30, 00); //   7:30am
+    timeAlarms[ 3] = calcTOD( 7, 45, 00); //   7:45am
+    timeAlarms[ 4] = calcTOD( 8, 00, 00); //   8:00am
+    timeAlarms[ 5] = calcTOD( 8, 30, 00); //   8:30am
+    timeAlarms[ 6] = calcTOD(19, 00, 00); //   7:00pm
+    timeAlarms[ 7] = calcTOD(19, 30, 00); //   7:30pm
+    timeAlarms[ 8] = calcTOD(20, 00, 00); //   8:00pm
+    timeAlarms[ 9] = calcTOD(21, 00, 00); //   9:00pm
+    timeAlarms[10] = calcTOD(21, 30, 00); //   9:30pm
     timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
 
     // Set up sun alarms (relating to sunrise/sunset), these will be configured on startup
@@ -81,7 +81,7 @@ void setup() {
     sunAlarms[10] = calcTOD( 0, 00, 00); // Night
     sunAlarms[11] = calcTOD(23, 59, 59); // Night
 
-    Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
+//    Alarm.alarmRepeat(dowWednesday, 12, 00, 00, rtcCorrection); // Correct the clock for a bit
 
     // Make sure LED is off
     writeRGB(OFF);
@@ -146,43 +146,45 @@ void loop() {
 //                sunAlarms[ 8] = calcTOD( 0, 00, 00); // Nautical Sunset
 //                sunAlarms[ 9] = calcTOD( 0, 00, 00); // Astronomical Sunset
                 switch(curSunAlarm){
-                case  7: // sunAlarms[ 7] = calcTOD( 0, 00, 00); // Civil Sunset
+                case 6: // sunAlarms[ 6] = calcTOD( 0, 00, 00); // Sunset (apparent)
                     crossFadeTo(adjustInt(ORANGE,0.5),1000.0*30.0);
                     break;
                 }
             } else {
 //                timeAlarms[ 0] = calcTOD( 0, 00, 00); // The first alarm should be the earliest time
 //                timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
-//                timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
-//                timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
-//                timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
-//                timeAlarms[ 5] = calcTOD( 7, 30, 00); //   7:30am
-//                timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
-//                timeAlarms[ 7] = calcTOD( 9, 00, 00); //   9:00am
-//                timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
-//                timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
-//                timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+//                timeAlarms[ 2] = calcTOD( 7, 30, 00); //   7:30am
+//                timeAlarms[ 3] = calcTOD( 7, 45, 00); //   7:45am
+//                timeAlarms[ 4] = calcTOD( 8, 00, 00); //   8:00am
+//                timeAlarms[ 5] = calcTOD( 8, 30, 00); //   8:30am
+//                timeAlarms[ 6] = calcTOD(19, 00, 00); //   7:00pm
+//                timeAlarms[ 7] = calcTOD(19, 30, 00); //   7:30pm
+//                timeAlarms[ 8] = calcTOD(20, 00, 00); //   8:00pm
+//                timeAlarms[ 9] = calcTOD(21, 00, 00); //   9:00pm
+//                timeAlarms[10] = calcTOD(21, 30, 00); //   9:30pm
 //                timeAlarms[11] = calcTOD(23, 59, 59); // The last alarm should be the latest time
                 switch(curAlarm){
-                case 3: // timeAlarms[ 3] = calcTOD( 7, 00, 00); //   7:00am
+                case 1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
+                    crossFadeTo(adjustInt(RED,0.50),1000.0*30.0);
+                    break;
+                case 2: // timeAlarms[ 2] = calcTOD( 7, 30, 00); //   7:30am
                     crossFadeTo(adjustInt(YELLOW,0.50),1000.0*30.0);
                     break;
-                case 4: // timeAlarms[ 4] = calcTOD( 7, 15, 00); //   7:15am
-                    crossFadeTo(adjustInt(GREEN,0.75),1000.0*5.0);
+                case 3: // timeAlarms[ 3] = calcTOD( 7, 45, 00); //   7:45am
+                    crossFadeTo(adjustInt(GREEN,0.75),1000.0*10.0);
                     break;
-                case 6: // timeAlarms[ 6] = calcTOD( 8, 00, 00); //   8:00am
+                case 5: // timeAlarms[ 5] = calcTOD( 8, 30, 00); //   8:30am
                     crossFadeTo(OFF,1000.0*90.0);
                     break;
-                case 8: // timeAlarms[ 8] = calcTOD(19, 00, 00); //   7:00pm
+                case 6: // timeAlarms[ 6] = calcTOD(19, 00, 00); //   7:00pm
                     crossFadeTo(adjustInt(controlColor,0.75),1000.0*30.0);
                     break;
-                case 9: // timeAlarms[ 9] = calcTOD(19, 30, 00); //   7:30pm
+                case 8: // timeAlarms[ 8] = calcTOD(20, 00, 00); //   8:00pm
                     crossFadeTo(adjustInt(controlColor,0.5),1000.0*30.0);
                     break;
                 case  0: // timeAlarms[ 0] = calcTOD( 0, 00, 00);
-                case  1: // timeAlarms[ 1] = calcTOD( 6, 00, 00); //   6:00am
-                case  2: // timeAlarms[ 2] = calcTOD( 6, 30, 00); //   6:30am
-                case 10: // timeAlarms[10] = calcTOD(20, 00, 00); //   8:00pm
+                case  9: // timeAlarms[ 9] = calcTOD(21, 00, 00); //   9:00pm
+                case 10: // timeAlarms[10] = calcTOD(21, 30, 00); //   9:30pm
                 case 11: // timeAlarms[11] = calcTOD(23, 59, 59);
                     crossFadeTo(adjustInt(controlColor,0.25),1000.0*30.0);
                     break;
@@ -628,18 +630,18 @@ void changeColorMode(LightMode newMode){
     }
 }
 
-void rtcCorrection(){
-    digitalClockDisplay();
-    Serial.print("rtcCorrection: ");
-    // Correct the clock
-    long singleWeekDelta = (long) -offsetSecPerYear / 365 * 7;
-    Serial.print(singleWeekDelta);
-    adjustTime(singleWeekDelta);
-    // Re-set the time
-    RTC.set(now());
-    Serial.println(" Done.");
-    digitalClockDisplay();
-}
+//void rtcCorrection(){
+//    digitalClockDisplay();
+//    Serial.print("rtcCorrection: ");
+//    // Correct the clock
+//    long singleWeekDelta = (long) -offsetSecPerYear / 365 * 7;
+//    Serial.print(singleWeekDelta);
+//    adjustTime(singleWeekDelta);
+//    // Re-set the time
+//    RTC.set(now());
+//    Serial.println(" Done.");
+//    digitalClockDisplay();
+//}
 
 void digitalClockDisplay(){
     digitalClockDisplay(now());

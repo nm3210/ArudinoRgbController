@@ -142,11 +142,11 @@ const int NUMALARMS = 12;
 const int NUMSUNALARMS = 12;
 const uint16_t CLOCKDISPLAY_TIMEOUT = 1000;  // milliseconds
 const uint16_t ALARMCHECK_TIMEOUT = 5000;    // milliseconds
-const long SUNRISECHECK_TIMEOUT = 86400000L; // milliseconds
+const long SUNRISECHECK_TIMEOUT = 86400000L; // milliseconds; milliseconds per day (reset astronomical alarms once per day)
 const float M_1PI3 = 1.0 * M_PI / 3.0;
 const float M_2PI3 = 2.0 * M_PI / 3.0;
 const float M_4PI3 = 4.0 * M_PI / 3.0;
-const signed int offsetSecPerYear = 5012; // Time offset for DS1307 chip, I think it changes based on how much processing you're doing
+//const signed int offsetSecPerYear = 4352; // Time offset for DS1307 chip
 
 // RAM-specific variables to keep track while handling the interrupts
 volatile unsigned long interruptCurTime = 0;
@@ -244,7 +244,7 @@ static const Color OFF = BLACK;
 static const Color PURPLE = VIOLET;
 
 Color PREV (0,0,0); // create the 'previous' color variable
-Color controlColor = RED; // reference the current manual (via ir) color
+Color controlColor = RED; // reference the current manual color (via ir)
 int MANUAL[3] = {0,0,0};
 
 // Function declarations
