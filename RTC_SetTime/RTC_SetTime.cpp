@@ -129,9 +129,9 @@ bool getTime(const char *str) {
 
     if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3)
         return false;
-    tm.Hour = Hour;
+    tm.Hour = (Hour + 0) % 24; // timezone offset, not automatic
     tm.Minute = Min;
-    tm.Second = Sec;
+    tm.Second = Sec + 13; // added to compensate for compile time -> flash time
     return true;
 }
 
@@ -148,8 +148,8 @@ bool getDate(const char *str) {
     }
     if (monthIndex >= 12)
         return false;
-    tm.Day = Day;
-    tm.Month = monthIndex + 1;
+    tm.Day = Day + 0; // sometimes a '+1' is needed, depending on time of day of flash
+    tm.Month = monthIndex + 1; // necessary to take zero-indexed month to proper month
     tm.Year = CalendarYrToTm(Year);
     return true;
 }
